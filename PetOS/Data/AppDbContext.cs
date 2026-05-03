@@ -14,14 +14,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<Pet>(entity =>
         {
-            entity.ToTable("PETS");
+            entity.ToTable("TB_PET");
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<Vacina>(entity =>
         {
-            entity.ToTable("VACINAS");
+            entity.ToTable("TB_VACINA");
             entity.HasKey(v => v.Id);
             entity.Property(v => v.Id).ValueGeneratedOnAdd();
 
@@ -33,7 +33,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Rotina>(entity =>
         {
-            entity.ToTable("ROTINAS");
+            entity.ToTable("TB_ROTINA");
             entity.HasKey(r => r.Id);
             entity.Property(r => r.Id).ValueGeneratedOnAdd();
             entity.Property(r => r.Ativa).HasConversion<short>();
@@ -46,7 +46,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Alerta>(entity =>
         {
-            entity.ToTable("ALERTAS");
+            entity.ToTable("TB_ALERTA");
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Id).ValueGeneratedOnAdd();
 
