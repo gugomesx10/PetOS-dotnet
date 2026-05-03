@@ -1,0 +1,19 @@
+﻿# IDE
+.idea/
+.vscode/
+
+# Build artifacts
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
