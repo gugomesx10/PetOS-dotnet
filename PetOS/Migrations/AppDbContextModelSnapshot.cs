@@ -58,7 +58,7 @@ namespace PetOS.Migrations
 
                     b.HasIndex("RotinaId");
 
-                    b.ToTable("ALERTAS", (string)null);
+                    b.ToTable("TB_ALERTA", (string)null);
                 });
 
             modelBuilder.Entity("PetOS.Models.Pet", b =>

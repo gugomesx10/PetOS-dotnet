@@ -79,7 +79,7 @@ namespace PetOS.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ALERTAS",
+                name: "TB_ALERTA",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "NUMBER(10)", nullable: false)
@@ -93,15 +93,15 @@ namespace PetOS.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ALERTAS", x => x.Id);
+                    table.PrimaryKey("PK_TB_ALERTA", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ALERTAS_PETS_PetId",
+                        name: "FK_TB_ALERTA_PETS_PetId",
                         column: x => x.PetId,
                         principalTable: "PETS",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ALERTAS_ROTINAS_RotinaId",
+                        name: "FK_TB_ALERTA_ROTINAS_RotinaId",
                         column: x => x.RotinaId,
                         principalTable: "ROTINAS",
                         principalColumn: "Id",
@@ -109,19 +109,19 @@ namespace PetOS.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ALERTAS_PetId",
-                table: "ALERTAS",
-                column: "PetId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ALERTAS_RotinaId",
-                table: "ALERTAS",
-                column: "RotinaId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ROTINAS_PetId",
                 table: "ROTINAS",
                 column: "PetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TB_ALERTA_PetId",
+                table: "TB_ALERTA",
+                column: "PetId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TB_ALERTA_RotinaId",
+                table: "TB_ALERTA",
+                column: "RotinaId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VACINAS_PetId",
@@ -133,7 +133,7 @@ namespace PetOS.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ALERTAS");
+                name: "TB_ALERTA");
 
             migrationBuilder.DropTable(
                 name: "VACINAS");

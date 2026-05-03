@@ -12,7 +12,7 @@ using PetOS.Data;
 namespace PetOS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260503165215_InitialCreate")]
+    [Migration("20260503170458_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -61,7 +61,7 @@ namespace PetOS.Migrations
 
                     b.HasIndex("RotinaId");
 
-                    b.ToTable("ALERTAS", (string)null);
+                    b.ToTable("TB_ALERTA", (string)null);
                 });
 
             modelBuilder.Entity("PetOS.Models.Pet", b =>

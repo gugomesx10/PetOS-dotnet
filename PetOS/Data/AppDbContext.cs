@@ -46,7 +46,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Alerta>(entity =>
         {
-            entity.ToTable("ALERTAS");
+            entity.ToTable("TB_ALERTA");
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Id).ValueGeneratedOnAdd();
 
