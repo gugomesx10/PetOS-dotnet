@@ -12,7 +12,7 @@ using PetOS.Data;
 namespace PetOS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260503170458_InitialCreate")]
+    [Migration("20260503170639_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -103,7 +103,7 @@ namespace PetOS.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PETS", (string)null);
+                    b.ToTable("TB_PET", (string)null);
                 });
 
             modelBuilder.Entity("PetOS.Models.Rotina", b =>
@@ -145,7 +145,7 @@ namespace PetOS.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("ROTINAS", (string)null);
+                    b.ToTable("TB_ROTINA", (string)null);
                 });
 
             modelBuilder.Entity("PetOS.Models.Vacina", b =>
@@ -179,7 +179,7 @@ namespace PetOS.Migrations
 
                     b.HasIndex("PetId");
 
-                    b.ToTable("VACINAS", (string)null);
+                    b.ToTable("TB_VACINA", (string)null);
                 });
 
             modelBuilder.Entity("PetOS.Models.Alerta", b =>
