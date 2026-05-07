@@ -1,5 +1,7 @@
 ﻿using PetOS.Models;
 using PetOS.Repositories.Interfaces;
+using PetOS.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace PetOS.Repositories;
 

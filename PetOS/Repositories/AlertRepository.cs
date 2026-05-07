@@ -1,5 +1,7 @@
 ﻿using PetOS.Models;
 using PetOS.Repositories.Interfaces;
+using PetOS.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace PetOS.Repositories;
 
@@ -12,7 +14,7 @@ public class AlertRepository : IAlertRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Alert>> GetAlertsAsync()
+    public async Task<IEnumerable<Alert>> GetAllAsync()
     {
         return await _context.Alerts.ToListAsync();
     }
