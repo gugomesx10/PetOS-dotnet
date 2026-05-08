@@ -12,6 +12,8 @@ builder.Services.AddDbContext<AppDbContext>(options => {
 });
 
 // Services
+builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddScoped<IRoutineService, RoutineService>();
 builder.Services.AddScoped<IVaccineService, VaccineService>();
 builder.Services.AddScoped<IPetService, PetService>();
 // Repositories
