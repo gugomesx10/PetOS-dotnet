@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using PetOS.Data;
 using PetOS.Repositories;
+using PetOS.Services;
 using PetOS.Repositories.Interfaces;
+using PetOS.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,10 @@ builder.Services.AddDbContext<AppDbContext>(options => {
     options.UseOracle(builder.Configuration.GetConnectionString("Oracle"));
 });
 
+// Services
+builder.Services.AddScoped<IVaccineService, VaccineService>();
+builder.Services.AddScoped<IPetService, PetService>();
+// Repositories
 builder.Services.AddScoped<IPetRepository, PetRepository>();
 builder.Services.AddScoped<IVaccineRepository, VaccineRepository>();
 builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
