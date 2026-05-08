@@ -1,57 +1,6 @@
 @PetOS_HostAddress = http://localhost:5199
 
-### Criar Pet
-POST {{PetOS_HostAddress}}/api/pets
-Content-Type: application/json
-
-{
-  "nome": "Luna",
-  "especie": "Cachorro",
-  "raca": "SRD",
-  "dataNascimento": "2021-08-15",
-  "responsavelNome": "Gustavo",
-  "responsavelTelefone": "11999990000"
-}
-
-### Listar Pets
-GET {{PetOS_HostAddress}}/api/pets
+GET  {{PetOS_HostAddress}}/weatherforecast/
 Accept: application/json
 
-### Criar Vacina
-POST {{PetOS_HostAddress}}/api/vacinas
-Content-Type: application/json
-
-{
-  "petId": 1,
-  "nome": "V10",
-  "dataAplicacao": "2026-05-01",
-  "proximaDose": "2027-05-01",
-  "observacoes": "Dose anual"
-}
-
-### Criar Rotina
-POST {{PetOS_HostAddress}}/api/rotinas
-Content-Type: application/json
-
-{
-  "petId": 1,
-  "titulo": "Alimentacao manha",
-  "descricao": "Racao premium",
-  "horario": "08:00:00",
-  "tipo": 1,
-  "frequencia": "Diaria",
-  "ativa": true
-}
-
-### Criar Alerta
-POST {{PetOS_HostAddress}}/api/alertas
-Content-Type: application/json
-
-{
-  "petId": 1,
-  "rotinaId": 1,
-  "titulo": "Hora da alimentacao",
-  "mensagem": "Dar comida para a Luna",
-  "dataAlerta": "2026-05-10T08:00:00Z",
-  "status": 1
-}
+###
