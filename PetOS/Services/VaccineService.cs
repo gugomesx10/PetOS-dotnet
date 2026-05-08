@@ -51,6 +51,23 @@ public class VaccineService : IVaccineService
         };
     }
 
+    public async Task<IEnumerable<VaccineResponseDto>> GetByPetIdAsync(long petId)
+    {
+        var vaccines = await _repository.GetByPetIdAsync(petId);
+
+        return vaccines.Select(v => new VaccineResponseDto
+        {
+            Id = v.Id,
+            PetId = v.PetId,
+            Name = v.Name,
+            Manufacturer = v.Manufacturer,
+            ApplicationDate = v.ApplicationDate,
+            NextDueDate = v.NextDueDate,
+            Dose = v.Dose,
+            CreatedAt = v.CreateAt
+        });
+    }
+
     public async Task<VaccineResponseDto> CreateAsync(VaccineCreateDto dto)
     {
         var vaccine = new Vaccine
