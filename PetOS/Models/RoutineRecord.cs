@@ -1,12 +1,25 @@
-﻿namespace PetOS.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
+namespace PetOS.Models;
+
+[Table("T_ROUTINE_RECORD")]
 public class RoutineRecord
 {
+    [Key]
     public long Id { get; set; }
+    [Required]
+    [ForeignKey("Pet")]
     public long PetId { get; set; }
+    [Required]
+    [StringLength(50)]
     public string Type { get; set; }
+    [Required]
+    [StringLength(255)]
     public string Decription { get; set; }
+    [Required]
     public DateTime Date { get; set; }
+    [StringLength(500)]
     public string Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     
