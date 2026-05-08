@@ -51,6 +51,22 @@ public class RoutineService : IRoutineService
         };
     }
 
+    public async Task<IEnumerable<RoutineResponseDto>> GetByPetIdAsync(long petId)
+    {
+        var routines = await _repository.GetByPetIdAsync(petId);
+
+        return routines.Select(r => new RoutineResponseDto
+        {
+            Id = r.Id,
+            PetId = r.PetId,
+            Type = r.Type,
+            Description = r.Decription,
+            Date = r.Date,
+            Notes = r.Notes,
+            CreatedAt = r.CreatedAt
+        });
+    }
+
     public async Task<RoutineResponseDto> CreateAsync(RoutineCreateDto dto)
     {
         var routine = new RoutineRecord

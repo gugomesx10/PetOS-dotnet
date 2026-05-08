@@ -24,6 +24,13 @@ public class RoutineRepository : IRoutineRepository
         return await _context.RoutineRecords.FindAsync(id);
     }
 
+    public async Task<IEnumerable<RoutineRecord>> GetByPetIdAsync(long petId)
+    {
+        return await _context.RoutineRecords
+            .Where(r => r.PetId == petId)
+            .ToListAsync();
+    }
+
     public async Task AddAsync(RoutineRecord routine)
     {
         await _context.RoutineRecords.AddAsync(routine);

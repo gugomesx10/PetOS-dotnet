@@ -49,6 +49,22 @@ public class AlertService : IAlertService
         };
     }
 
+    public async Task<IEnumerable<AlertResponseDto>> GetUnreadAsync()
+    {
+        var alerts = await _repository.GetUnreadAsync();
+
+        return alerts.Select(a => new AlertResponseDto
+        {
+            Id = a.Id,
+            PetId = a.PetId,
+            VaccineId = a.VaccineId,
+            Message = a.Message,
+            AlertDate = a.AlertDate,
+            IsRead = a.IsRead,
+            CreatedAt = a.CreatedAt,
+        });
+    }
+
     public async Task<AlertResponseDto> CreateAsync(AlertCreateDto dto)
     {
         var alert = new Alert

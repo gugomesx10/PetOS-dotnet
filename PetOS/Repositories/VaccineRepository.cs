@@ -24,6 +24,13 @@ public class VaccineRepository :  IVaccineRepository
         return await _context.Vaccines.FindAsync(id);
     }
 
+    public async Task<IEnumerable<Vaccine>> GetByPetIdAsync(long petId)
+    {
+        return await _context.Vaccines
+            .Where(v => v.PetId == petId)
+            .ToListAsync();
+    }
+
     public async Task AddAsync(Vaccine vaccine)
     {
         await _context.Vaccines.AddAsync(vaccine);

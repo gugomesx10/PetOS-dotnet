@@ -24,6 +24,20 @@ public class PetRepository : IPetRepository
         return await _context.Pets.FindAsync(id);
     }
 
+    public async Task<IEnumerable<Pet>> GetBySpeciesAsync(string species)
+    {
+        return await _context.Pets
+            .Where(p => p.Species.ToLower() == species.ToLower())
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Pet>> GetByNameAsync(string name)
+    {
+        return await _context.Pets
+            .Where(p => p.Name.ToLower().Contains(name.ToLower()))
+            .ToListAsync();
+    }
+
     public async Task AddAsync(Pet pet)
     {
         await _context.Pets.AddAsync(pet);

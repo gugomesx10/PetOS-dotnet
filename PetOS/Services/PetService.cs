@@ -50,6 +50,40 @@ public class PetService : IPetService
         };
     }
 
+    public async Task<IEnumerable<PetResponseDto>> GetBySpecieAsync(string species)
+    {
+        var pets = await _repository.GetBySpeciesAsync(species);
+
+        return pets.Select(p => new PetResponseDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Species = p.Species,
+            Breed = p.Breed,
+            BirthDate = p.BirthDate,
+            Gender = p.Gender,
+            weight = p.Weight,
+            CreatedAt = p.CreatedAt,
+        });
+    }
+
+    public async Task<IEnumerable<PetResponseDto>> GetByNameAsync(string name)
+    {
+        var pets = await _repository.GetByNameAsync(name);
+
+        return pets.Select(p => new PetResponseDto
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Species = p.Species,
+            Breed = p.Breed,
+            BirthDate = p.BirthDate,
+            Gender = p.Gender,
+            weight = p.Weight,
+            CreatedAt = p.CreatedAt,
+        });
+    }
+
     public async Task<PetResponseDto> CreateAsync(PetCreateDto dto)
     {
         var pet = new Pet

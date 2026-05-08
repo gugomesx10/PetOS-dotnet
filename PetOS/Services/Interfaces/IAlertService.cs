@@ -7,6 +7,7 @@ public interface IAlertService
 {
     Task<IEnumerable<AlertResponseDto>> GetAllAsync();
     Task<AlertResponseDto?> GetByIdAsync(long id);
+    Task<IEnumerable<AlertResponseDto>> GetUnreadAsync();
     Task<AlertResponseDto> CreateAsync(AlertCreateDto dto);
     Task UpdateAsync(long id, AlertCreateDto dto);
     Task DeleteAsync(long id);
