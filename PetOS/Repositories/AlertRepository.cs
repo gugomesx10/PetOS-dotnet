@@ -24,6 +24,13 @@ public class AlertRepository : IAlertRepository
         return await _context.Alerts.FindAsync(id);
     }
 
+    public async Task<IEnumerable<Alert>> GetUnreadAsync()
+    {
+        return await _context.Alerts
+            .Where(a => !a.IsRead)
+            .ToListAsync();
+    }
+
     public async Task AddAsync(Alert alert)
     {
         await _context.Alerts.AddAsync(alert);
