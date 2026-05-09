@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PetOS.Dto.Vaccine;
+using PetOS.Dto.Routine;
 using PetOS.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -7,94 +7,95 @@ namespace PetOS.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class VaccineController : ControllerBase
+public class RoutineController : ControllerBase
 {
-    private readonly IVaccineService _service;
+    private readonly IRoutineService _service;
 
-    public VaccineController(IVaccineService service)
+    public RoutineController(IRoutineService service)
     {
         _service = service;
     }
 
     /// <summary>
-    /// Lista todas vacinas
+    /// Lista todas as rotinas
     /// </summary>
     [HttpGet]
-    [SwaggerOperation(Summary = "Lista todas vacinas")]
+    [SwaggerOperation(Summary = "Lista de rotinas")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetAll()
     {
-        var vacines = await _service.GetAllAsync();
-        
-        if(!vacines.Any())
+        var routines = await _service.GetAllAsync();
+
+        if (!routines.Any())
         {
             return NoContent();
         }
+
         return Ok(new
         {
-            message = "Vacinas encontradas com sucesso",
-            data = vacines
+            message = "Rotinas encontradas com sucesso",
+            data = routines
         });
     }
 
     /// <summary>
-    /// Faz uma buscar pela vacina ao inserir Id
+    /// Busca rotina por Id
     /// </summary>
     [HttpGet("{id}")]
-    [SwaggerOperation(Summary = "Busca vacina por Id")]
+    [SwaggerOperation(Summary = "Busca rotina por id")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(long id)
     {
-        var vaccine = await _service.GetByIdAsync(id);
+        var routine = await _service.GetByIdAsync(id);
 
-        if (vaccine == null)
+        if (routine == null)
         {
             return NotFound(new
             {
-                message = "Vacina não encontrada"
+                message = "Rotina não encontrada"
             });
         }
 
         return Ok(new
         {
-            message = "Vacina encontrada com sucesso",
-            data = vaccine
+            message = "Rotina encontrada com sucesso",
+            data = routine
         });
     }
 
     /// <summary>
-    /// Busca a vacina de um pet especifico
+    /// Busca rotinas de um pet especifico 
     /// </summary>
     [HttpGet("pet/{petId}")]
-    [SwaggerOperation(Summary = "Busca as vacinas de um pet específico")]
+    [SwaggerOperation(Summary = "Busca rotina por pet específico")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetByPetId(long petId)
     {
-        var vaccines = await _service.GetByPetIdAsync(petId);
+        var routines = await _service.GetByPetIdAsync(petId);
 
-        if (!vaccines.Any())
+        if (!routines.Any())
         {
             return NoContent();
         }
 
         return Ok(new
         {
-            message = "Vacinas encontradas com sucesso",
-            data = vaccines
+            message = "Rotinas encontradas com sucesso",
+            data = routines
         });
     }
 
     /// <summary>
-    /// Cria a vacina e insere ao banco
+    /// Cadastra uma nova rotina
     /// </summary>
     [HttpPost]
-    [SwaggerOperation(Summary = "Adiciona a vacina no banco")]
+    [SwaggerOperation(Summary = "Adiciona a rotina")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Create(VaccineCreateDto dto)
+    public async Task<IActionResult> Create(RoutineCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -111,20 +112,20 @@ public class VaccineController : ControllerBase
             new { id = created.Id },
             new
             {
-                message = "Vaccina adicionada com sucesso",
+                message = "Rotina criado com sucesso",
                 data = created
             });
     }
 
     /// <summary>
-    /// Atualiza a vacina do pet
+    /// Atualiza rotina por Id
     /// </summary>
     [HttpPut("{id}")]
-    [SwaggerOperation(Summary = "Atualiza a vacina por Id")]
+    [SwaggerOperation(Summary = "Atualiza a rotina")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Update(long id, VaccineCreateDto dto)
+    public async Task<IActionResult> Update(long id, RoutineCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -134,13 +135,13 @@ public class VaccineController : ControllerBase
             });
         }
 
-        var vaccine = await _service.GetByIdAsync(id);
+        var routine = await _service.GetByIdAsync(id);
 
-        if (vaccine == null)
+        if (routine == null)
         {
             return NotFound(new
             {
-                message = "Vacina não encontrada"
+                message = "Rotina não encontrada"
             });
         }
 
@@ -148,36 +149,35 @@ public class VaccineController : ControllerBase
 
         return Ok(new
         {
-            message = "Vaccina atualizada com sucesso",
+            message = "Rotina atualizado com sucesso",
         });
     }
 
     /// <summary>
-    /// Deleta a vacina 
+    /// Remove rotina por Id
     /// </summary>
+
     [HttpDelete("{id}")]
-    [SwaggerOperation(Summary = "Remover a vacina por Id")]
+    [SwaggerOperation(Summary = "Remover a rotina")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(long id)
     {
-        var vaccine = await _service.GetByIdAsync(id);
+        var routine = await _service.GetByIdAsync(id);
 
-        if (vaccine == null)
+        if (routine == null)
         {
             return NotFound(new
             {
-                message = "Vacina não encontrada"
+                message = "Rotina não encontrada"
             });
         }
-
+        
         await _service.DeleteAsync(id);
-
         return Ok(new
         {
-            message = "Vacina removida com sucesso"
+            message = "Rotina excluido com sucesso"
         });
     }
-
 }

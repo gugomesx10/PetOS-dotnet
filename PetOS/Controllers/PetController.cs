@@ -73,7 +73,7 @@ public class PetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetBySpecies(string species)
     {
-        var pets = await _service.GetBySpeciesAsync(species);
+        var pets = await _service.GetBySpecieAsync(species);
 
         if (!pets.Any())
         {
@@ -118,6 +118,13 @@ public class PetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(PetCreateDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new
+            {
+                message = "Dados inválidos"
+            });
+        }
         var createdPet = await _service.CreateAsync(dto);
 
         return CreatedAtAction(
@@ -140,6 +147,14 @@ public class PetController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Update(long id, PetCreateDto dto)
     {
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new
+            {
+                message = "Dados inválidos"
+            });
+        }
         var pet = await _service.GetByIdAsync(id);
 
         if (pet == null)
