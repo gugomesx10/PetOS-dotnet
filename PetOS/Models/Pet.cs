@@ -10,25 +10,25 @@ public class Pet
     public long Id { get; set; }
     [Required]
     [StringLength(100)]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     [Required]
     [StringLength(50)]
-    public string Species { get; set; }
+    public string Species { get; set; } =  string.Empty;
     [Required]
     [StringLength(100)]
-    public string Breed { get; set; }
+    public string Breed { get; set; } = string.Empty;
     [Required]
     public DateTime BirthDate { get; set; }
     [Required]
     [StringLength(30)]
-    public string Gender { get; set; }
+    public string Gender { get; set; } = string.Empty;
     [Required]
     [Range(0.1, 9999.99)]
     public decimal Weight { get; set; }
     public DateTime CreatedAt { get; set; }
     
     // e como haverá relação com Vaccine e RoutineRecord
-    public ICollection<Vaccine> Vaccines { get; set; }
-    public ICollection<RoutineRecord> RoutineRecords { get; set; }
-    public ICollection<Alert> Alerts { get; set; }
+    public ICollection<Vaccine> Vaccines { get; set; } =  new List<Vaccine>();
+    public ICollection<RoutineRecord> RoutineRecords { get; set; } =   new List<RoutineRecord>();
+    public ICollection<Alert> Alerts { get; set; } =   new List<Alert>();
 }

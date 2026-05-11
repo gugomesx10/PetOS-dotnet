@@ -23,7 +23,7 @@ public class RoutineService : IRoutineService
             Id = r.Id,
             PetId = r.PetId,
             Type = r.Type,
-            Description = r.Decription,
+            Description = r.Description,
             Date = r.Date,
             Notes = r.Notes,
             CreatedAt = r.CreatedAt
@@ -44,7 +44,7 @@ public class RoutineService : IRoutineService
             Id = routine.Id,
             PetId = routine.PetId,
             Type = routine.Type,
-            Description = routine.Decription,
+            Description = routine.Description,
             Date = routine.Date,
             Notes = routine.Notes,
             CreatedAt = routine.CreatedAt
@@ -60,7 +60,7 @@ public class RoutineService : IRoutineService
             Id = r.Id,
             PetId = r.PetId,
             Type = r.Type,
-            Description = r.Decription,
+            Description = r.Description,
             Date = r.Date,
             Notes = r.Notes,
             CreatedAt = r.CreatedAt
@@ -73,7 +73,7 @@ public class RoutineService : IRoutineService
         {
             PetId = dto.PetId,
             Type = dto.Type,
-            Decription = dto.Description,
+            Description = dto.Description,
             Date = dto.Date,
             Notes = dto.Notes,
             CreatedAt = DateTime.UtcNow
@@ -86,7 +86,7 @@ public class RoutineService : IRoutineService
             Id = routine.Id,
             PetId = routine.PetId,
             Type = routine.Type,
-            Description = routine.Decription,
+            Description = routine.Description,
             Date = routine.Date,
             Notes = routine.Notes,
             CreatedAt = routine.CreatedAt
@@ -102,7 +102,7 @@ public class RoutineService : IRoutineService
         
         routine.PetId = dto.PetId;
         routine.Type = dto.Type;
-        routine.Decription =  dto.Description;
+        routine.Description =  dto.Description;
         routine.Date = dto.Date;
         routine.Notes = dto.Notes;
         

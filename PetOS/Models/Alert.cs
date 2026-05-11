@@ -14,7 +14,7 @@ public class Alert
     public long?  VaccineId { get; set; }
     [Required]
     [StringLength(255)]
-    public string Message { get; set; }
+    public string Message { get; set; } =  string.Empty;
     [Required]
     public DateTime AlertDate { get; set; }
     public bool IsRead { get; set; }
