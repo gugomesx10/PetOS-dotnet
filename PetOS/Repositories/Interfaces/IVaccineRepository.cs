@@ -5,7 +5,7 @@ namespace PetOS.Repositories.Interfaces;
 public interface IVaccineRepository
 {
     Task <IEnumerable<Vaccine>> GetAllAsync();
-    Task<Vaccine> GetByIdAsync(long id);
+    Task<Vaccine?> GetByIdAsync(long id);
     Task<IEnumerable<Vaccine>> GetByPetIdAsync(long petId);
     Task AddAsync(Vaccine vaccine);
     Task UpdateAsync(Vaccine vaccine);

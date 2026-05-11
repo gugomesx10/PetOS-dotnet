@@ -19,7 +19,7 @@ public class VaccineRepository :  IVaccineRepository
         return await _context.Vaccines.ToListAsync();
     }
     
-    public async Task<Vaccine> GetByIdAsync(long id)
+    public async Task<Vaccine?> GetByIdAsync(long id)
     {
         return await _context.Vaccines.FindAsync(id);
     }
