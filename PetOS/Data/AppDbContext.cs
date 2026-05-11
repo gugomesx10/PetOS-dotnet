@@ -14,5 +14,13 @@ public class AppDbContext : DbContext
     public DbSet<Vaccine> Vaccines { get; set; }
     public DbSet<RoutineRecord> RoutineRecords { get; set; }
     public DbSet<Alert>  Alerts { get; set; }
-    
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Pet>()
+            .Property(p => p.Weight)
+            .HasPrecision(10, 2);
+    }
 }

@@ -17,7 +17,7 @@ public class Alert
     public string Message { get; set; } =  string.Empty;
     [Required]
     public DateTime AlertDate { get; set; }
-    public bool IsRead { get; set; }
+    public int IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
     
     // navegação

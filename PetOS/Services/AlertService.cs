@@ -73,7 +73,7 @@ public class AlertService : IAlertService
             VaccineId = dto.VaccineId,
             Message = dto.Message,
             AlertDate = dto.AlertDate,
-            IsRead = false,
+            IsRead = 0,
             CreatedAt = DateTime.UtcNow
         };
         

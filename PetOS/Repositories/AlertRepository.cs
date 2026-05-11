@@ -27,7 +27,7 @@ public class AlertRepository : IAlertRepository
     public async Task<IEnumerable<Alert>> GetUnreadAsync()
     {
         return await _context.Alerts
-            .Where(a => !a.IsRead)
+            .Where(a => a.IsRead == 0)
             .ToListAsync();
     }
 
