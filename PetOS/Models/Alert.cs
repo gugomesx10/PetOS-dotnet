@@ -21,7 +21,7 @@ public class Alert
     public DateTime CreatedAt { get; set; }
     
     // navegação
-    public Pet Pet { get; set; }
+    public Pet? Pet { get; set; }
     
     // relação
     public Vaccine?  Vaccine { get; set; }

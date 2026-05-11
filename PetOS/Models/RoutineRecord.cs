@@ -24,6 +24,6 @@ public class RoutineRecord
     public DateTime CreatedAt { get; set; }
     
     // navageção
-    public Pet Pet { get; set; }
+    public Pet? Pet { get; set; }
     
 }

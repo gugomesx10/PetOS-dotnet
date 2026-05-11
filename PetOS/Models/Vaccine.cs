@@ -27,7 +27,7 @@ public class Vaccine
     public DateTime CreateAt { get; set; }
     
     // pra navegação, blz
-    public Pet Pet { get; set; }
+    public Pet? Pet { get; set; }
     
     // relação 
     public ICollection<Alert> Alerts { get; set; } =  new List<Alert>();
