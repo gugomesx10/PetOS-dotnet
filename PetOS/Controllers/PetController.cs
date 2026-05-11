@@ -41,7 +41,7 @@ public class PetController : ControllerBase
 
     /// <summary>
     /// buscar um pet pelo id que inserir
-    /// </summar>
+    /// </summary>
     [HttpGet("{id}")]
     [SwaggerOperation(Summary = "Busca um pet por ID")]
     [ProducesResponseType(StatusCodes.Status200OK)]

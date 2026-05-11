@@ -120,7 +120,7 @@ public class AlertController : ControllerBase
 
     /// <summary>
     /// Atualiza alerta por id
-    /// <summary>
+    /// </summary>
     [HttpPut("{id}")]
     [SwaggerOperation(Summary = "Atualiza busca alerta")]
     [ProducesResponseType(StatusCodes.Status200OK)]
