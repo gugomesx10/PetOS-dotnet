@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PetOS.Models;
 
+[Table("T_ALERT")]
 public class Alert
 {
     [Key]
