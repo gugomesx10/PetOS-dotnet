@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PetOS.Dto.Alert;
-using PetOS.Services;
 using PetOS.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -12,7 +11,7 @@ public class AlertController : ControllerBase
 {
     private readonly IAlertService _service;
 
-    public AlertController(AlertService service)
+    public AlertController(IAlertService service)
     {
         _service = service;
     }
