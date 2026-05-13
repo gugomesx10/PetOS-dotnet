@@ -2,6 +2,22 @@
 
 API RESTful para gerenciamento de **pets, vacinas, rotinas e alertas**, usando ASP.NET Core Web API com arquitetura em camadas, Entity Framework Core e Oracle.
 
+---
+
+## Integrantes
+
+**Turma:** 2TDSPO
+
+| Aluno | RM |
+|---|---|
+| Gustavo Gomes Martins | 555999 |
+| Pedro dos Anjos | 563832 |
+| Matheus de Mattos Vecchi | 561716 |
+| Nicholas Albuquerque Buzo | 561082 |
+| Nicholas Camillo Canadas de Paula | 561262 |
+
+---
+
 ## Tecnologias
 
 - .NET 8
@@ -9,6 +25,8 @@ API RESTful para gerenciamento de **pets, vacinas, rotinas e alertas**, usando A
 - Entity Framework Core
 - Oracle Database (`Oracle.EntityFrameworkCore`)
 - Swagger / OpenAPI
+
+---
 
 ## Estrutura do projeto
 
@@ -21,7 +39,6 @@ PetOS/
 ├── DTOs/
 ├── Data/
 │   ├── AppDbContext.cs
-│   └── AppDbContextFactory.cs
 ├── Exceptions/
 ├── Mappings/
 ├── Migrations/
@@ -29,117 +46,160 @@ PetOS/
 └── appsettings.json
 ```
 
-## Modelo de dominio
+### Estrutura dos Controllers
 
-- `Pet` (1:N) `Vacina`
-- `Pet` (1:N) `Rotina`
-- `Pet` (1:N) `Alerta`
-- `Rotina` (1:N) `Alerta` (opcional)
+![Estrutura Controllers](PetOS/img/ESTRUTURA-CONTROLLERS.png)
+
+---
+
+## Modelo de domínio
+
+- `Pet` (1:N) `Vaccine`
+- `Pet` (1:N) `Routine`
+- `Pet` (1:N) `Alert`
+- `Routine` (1:N) `Alert` (opcional)
+
+---
 
 ## Endpoints principais
 
 Base URL: `/api`
 
-### Pets
+### Pet
 
-- `GET /api/pets`
-- `GET /api/pets/{id}`
-- `GET /api/pets/especie/{especie}`
-- `GET /api/pets/responsavel/{responsavel}`
-- `POST /api/pets`
-- `PUT /api/pets/{id}`
-- `DELETE /api/pets/{id}`
+- `GET /api/Pet`
+- `GET /api/Pet/{id}`
+- `GET /api/Pet/especie/{especie}`
+- `GET /api/Pet/nome/{nome}`
+- `POST /api/Pet`
+- `PUT /api/Pet/{id}`
+- `DELETE /api/Pet/{id}`
 
-### Vacinas
+#### POST Pet
 
-- `GET /api/vacinas`
-- `GET /api/vacinas/{id}`
-- `GET /api/vacinas/pet/{petId}`
-- `POST /api/vacinas`
-- `PUT /api/vacinas/{id}`
-- `DELETE /api/vacinas/{id}`
+![POST Pet](PetOS/img/PET-POST.png)
 
-### Rotinas
+#### GET Pet por ID
 
-- `GET /api/rotinas`
-- `GET /api/rotinas/{id}`
-- `GET /api/rotinas/pet/{petId}`
-- `POST /api/rotinas`
-- `PUT /api/rotinas/{id}`
-- `DELETE /api/rotinas/{id}`
+![GET Pet por ID](PetOS/img/GetByID-PET.png)
 
-### Alertas
+#### GET Pet por Espécie
 
-- `GET /api/alertas`
-- `GET /api/alertas/{id}`
-- `GET /api/alertas/pet/{petId}`
-- `POST /api/alertas`
-- `PUT /api/alertas/{id}`
-- `DELETE /api/alertas/{id}`
+![GET Pet por Espécie](PetOS/img/PET-POR-ESPECIE.png)
 
-## Retornos HTTP implementados
+#### GET Pet por Nome
 
-- `200 OK` em consultas GET
-- `201 Created` em criacao de recursos (POST)
-- `204 NoContent` em atualizacao/remocao (PUT/DELETE)
-- `400 BadRequest` em validacoes e referencias invalidas
-- `404 NotFound` para recursos inexistentes
+![GET Pet por Nome](PetOS/img/PET-POR-NOME.png)
 
-## Configuracao do banco Oracle
+#### PUT Pet
 
-A connection string `OracleDb` esta em:
+![PUT Pet](PetOS/img/PUT-PET.png)
+
+---
+
+### Vaccine
+
+- `GET /api/Vaccine`
+- `GET /api/Vaccine/{id}`
+- `POST /api/Vaccine`
+- `DELETE /api/Vaccine/{id}`
+
+#### POST Vaccine
+
+![POST Vaccine](PetOS/img/VACCINE-POST.png)
+
+#### DELETE Vaccine
+
+![DELETE Vaccine](PetOS/img/VACCINE-REMOVE.png)
+
+---
+
+### Routine
+
+- `GET /api/Routine`
+- `GET /api/Routine/{id}`
+- `POST /api/Routine`
+- `DELETE /api/Routine/{id}`
+
+#### POST Routine
+
+![POST Routine](PetOS/img/ROUTINE-POST.png)
+
+---
+
+### Alert
+
+- `GET /api/Alert`
+- `GET /api/Alert/{id}`
+- `GET /api/Alert/unread`
+- `POST /api/Alert`
+- `DELETE /api/Alert/{id}`
+
+#### POST Alert
+
+![POST Alert](PetOS/img/ALERT-POST.png)
+
+#### GET Alertas não lidos
+
+![GET Unread Alerts](PetOS/img/GET-UNREAD.png)
+
+#### DELETE Alert
+
+![DELETE Alert](PetOS/img/ALERT-REMOVE.png)
+
+---
+
+## Ordem correta para deletar registros
+
+Para evitar erro de chave estrangeira, siga esta ordem:
+
+### 1. Alert
+Depende de: **Pet**, **Vaccine**
+- `DELETE /api/Alert/{id}`
+
+### 2. Vaccine
+Depende de: **Pet**
+- `DELETE /api/Vaccine/{id}`
+
+### 3. Routine
+Depende de: **Pet**
+- `DELETE /api/Routine/{id}`
+
+### 4. Pet
+Por último.
+- `DELETE /api/Pet/{id}`
+
+---
+
+## Retornos HTTP
+
+| Código | Situação |
+|---|---|
+| `200 OK` | Consultas GET |
+| `201 Created` | Criação de recursos (POST) |
+| `204 No Content` | Atualização/remoção (PUT/DELETE) |
+| `400 Bad Request` | Validações e referências inválidas |
+| `404 Not Found` | Recursos inexistentes |
+
+---
+
+## Configuração do banco Oracle
+
+A connection string está em:
 
 - `PetOS/appsettings.json`
 - `PetOS/appsettings.Development.json`
 
-> Recomendacao: mover senha para User Secrets ou variavel de ambiente em ambientes reais.
+---
 
 ## Como executar
 
-```powershell
-cd C:\Rider\PetOS\PetOS
+```git bash
+cd \PetOS\PetOS
 dotnet restore
 dotnet build
 dotnet ef database update
 dotnet run
 ```
 
-Swagger (em Development):
-
-- `https://localhost:xxxx/swagger`
-
-## Troubleshooting Oracle
-
-Se ocorrer `ORA-00955` durante migration, significa que ja existem objetos com o mesmo nome.
-
-- Opcao 1: usar outro schema/usuario Oracle limpo.
-- Opcao 2: remover manualmente as tabelas `ALERTAS`, `VACINAS`, `ROTINAS`, `PETS` e executar `dotnet ef database update` novamente.
-
-## Git Flow sugerido
-
-Branches:
-
-- `main`
-- `develop`
-- `feature/pet-crud`
-- `feature/vaccine-module`
-- `feature/routine-module`
-- `feature/alert-module`
-- `feature/swagger`
-- `release/v1.0.0`
-
-Fluxo:
-
-- `feature/* -> develop -> release/v1.0.0 -> main`
-
-Exemplo de comandos:
-
-```powershell
-git checkout -b develop
-git checkout -b feature/pet-crud
-git checkout develop
-git merge --no-ff feature/pet-crud
-git checkout -b release/v1.0.0
-git checkout main
-git merge --no-ff release/v1.0.0
-```
+Swagger disponível em: `http://localhost:5199/swagger/index.html`
