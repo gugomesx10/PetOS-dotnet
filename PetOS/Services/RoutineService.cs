@@ -2,6 +2,7 @@
 using PetOS.Models;
 using PetOS.Repositories.Interfaces;
 using PetOS.Services.Interfaces;
+using PetOS.Observability;
 
 namespace PetOS.Services;
 
@@ -16,6 +17,8 @@ public class RoutineService : IRoutineService
 
     public async Task<IEnumerable<RoutineResponseDto>> GetAllAsync()
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("RoutineService.GetAllAsync");
         var routines = await _repository.GetAllAsync();
 
         return routines.Select(r => new RoutineResponseDto()
@@ -32,6 +35,10 @@ public class RoutineService : IRoutineService
 
     public async Task<RoutineResponseDto?> GetByIdAsync(long id)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("RoutineService.GetByIdAsync");
+
+        activity?.SetTag("routine.id", id);
         var routine = await _repository.GetByIdAsync(id);
         
         if (routine == null)
@@ -53,6 +60,10 @@ public class RoutineService : IRoutineService
 
     public async Task<IEnumerable<RoutineResponseDto>> GetByPetIdAsync(long petId)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("RoutineService.GetByPetIdAsync");
+
+        activity?.SetTag("pet.id", petId);
         var routines = await _repository.GetByPetIdAsync(petId);
 
         return routines.Select(r => new RoutineResponseDto
@@ -69,6 +80,10 @@ public class RoutineService : IRoutineService
 
     public async Task<RoutineResponseDto> CreateAsync(RoutineCreateDto dto)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("RoutineService.CreateAsync");
+
+        activity?.SetTag("pet.id", dto.PetId);
         var routine = new RoutineRecord
         {
             PetId = dto.PetId,
@@ -95,6 +110,10 @@ public class RoutineService : IRoutineService
 
     public async Task UpdateAsync(long id, RoutineCreateDto dto)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("RoutineService.UpdateAsync");
+
+        activity?.SetTag("routine.id", id);
         var routine = await _repository.GetByIdAsync(id);
         
         if (routine == null)
@@ -111,6 +130,10 @@ public class RoutineService : IRoutineService
     
     public async Task DeleteAsync(long id)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("RoutineService.DeleteAsync");
+
+        activity?.SetTag("routine.id", id);
         await _repository.DeleteAsync(id);
     }
 }

@@ -1,6 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# 
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetOS", "PetOS\PetOS.csproj", "{F8019EC0-B3D0-4004-830D-F2A4986C6505}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{90396E7B-4335-47CA-8CCC-15CAAD13000D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetOS.UnitTests", "Tests\PetOS.UnitTests\PetOS.UnitTests.csproj", "{525AF112-32EA-4AFA-A041-783A7C97DABC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetOS.IntegrationTests", "Tests\PetOS.IntegrationTests\PetOS.IntegrationTests.csproj", "{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +19,17 @@ Global
 		{F8019EC0-B3D0-4004-830D-F2A4986C6505}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8019EC0-B3D0-4004-830D-F2A4986C6505}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8019EC0-B3D0-4004-830D-F2A4986C6505}.Release|Any CPU.Build.0 = Release|Any CPU
+		{525AF112-32EA-4AFA-A041-783A7C97DABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{525AF112-32EA-4AFA-A041-783A7C97DABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{525AF112-32EA-4AFA-A041-783A7C97DABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{525AF112-32EA-4AFA-A041-783A7C97DABC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{525AF112-32EA-4AFA-A041-783A7C97DABC} = {90396E7B-4335-47CA-8CCC-15CAAD13000D}
+		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8} = {90396E7B-4335-47CA-8CCC-15CAAD13000D}
 	EndGlobalSection
 EndGlobal
