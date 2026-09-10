@@ -2,6 +2,7 @@
 using PetOS.Models;
 using PetOS.Repositories.Interfaces;
 using PetOS.Services.Interfaces;
+using PetOS.Observability;
 
 namespace PetOS.Services;
 
@@ -16,6 +17,8 @@ public class AlertService : IAlertService
 
     public async Task<IEnumerable<AlertResponseDto>> GetAllAsync()
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("AlertService.GetAllAsync");
         var alerts = await _repository.GetAllAsync();
 
         return alerts.Select(a => new AlertResponseDto
@@ -32,6 +35,10 @@ public class AlertService : IAlertService
 
     public async Task<AlertResponseDto?> GetByIdAsync(long id)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("AlertService.GetByIdAsync");
+
+        activity?.SetTag("alert.id", id);
         var alert = await _repository.GetByIdAsync(id);
 
         if (alert == null)
@@ -51,6 +58,8 @@ public class AlertService : IAlertService
 
     public async Task<IEnumerable<AlertResponseDto>> GetUnreadAsync()
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("AlertService.GetUnreadAsync");
         var alerts = await _repository.GetUnreadAsync();
 
         return alerts.Select(a => new AlertResponseDto
@@ -67,6 +76,10 @@ public class AlertService : IAlertService
 
     public async Task<AlertResponseDto> CreateAsync(AlertCreateDto dto)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("AlertService.CreateAsync");
+
+        activity?.SetTag("pet.id", dto.PetId);
         var alert = new Alert
         {
             PetId = dto.PetId,
@@ -93,6 +106,10 @@ public class AlertService : IAlertService
     
     public async Task UpdateAsync(long id, AlertCreateDto dto)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("AlertService.UpdateAsync");
+
+        activity?.SetTag("alert.id", id);
         var alert = await _repository.GetByIdAsync(id);
 
         if (alert == null)
@@ -108,6 +125,10 @@ public class AlertService : IAlertService
     
     public async Task DeleteAsync(long id)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("AlertService.DeleteAsync");
+
+        activity?.SetTag("alert.id", id);
         await _repository.DeleteAsync(id);
     }
 }

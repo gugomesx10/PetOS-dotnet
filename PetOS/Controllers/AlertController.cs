@@ -10,10 +10,17 @@ namespace PetOS.Controllers;
 public class AlertController : ControllerBase
 {
     private readonly IAlertService _service;
+    private readonly IPetService _petService;
+    private readonly IVaccineService _vaccineService;
 
-    public AlertController(IAlertService service)
+    public AlertController(
+        IAlertService service,
+        IPetService petService,
+        IVaccineService vaccineService)
     {
         _service = service;
+        _petService = petService;
+        _vaccineService = vaccineService;
     }
 
     /// <summary>
@@ -95,6 +102,7 @@ public class AlertController : ControllerBase
     [SwaggerOperation(Summary = "Cadastra um novo alerta no banco")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create(AlertCreateDto dto)
     {
         if (!ModelState.IsValid)
@@ -105,6 +113,37 @@ public class AlertController : ControllerBase
             });
         }
 
+        var pet = await _petService.GetByIdAsync(dto.PetId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
+        if (dto.VaccineId.HasValue)
+        {
+            var vaccine = await _vaccineService.GetByIdAsync(dto.VaccineId.Value);
+
+            if (vaccine == null)
+            {
+                return NotFound(new
+                {
+                    message = "Vacina não encontrada"
+                });
+            }
+
+            if (vaccine.PetId != dto.PetId)
+            {
+                return BadRequest(new
+                {
+                    message = "A vacina informada não pertence ao pet informado"
+                });
+            }
+        }
+
         var created = await _service.CreateAsync(dto);
 
         return CreatedAtAction(
@@ -112,7 +151,7 @@ public class AlertController : ControllerBase
             new { id = created.Id },
             new
             {
-                message = "Alerta criada com sucesso",
+                message = "Alerta criado com sucesso",
                 data = created
             });
     }
@@ -121,7 +160,7 @@ public class AlertController : ControllerBase
     /// Atualiza alerta por id
     /// </summary>
     [HttpPut("{id}")]
-    [SwaggerOperation(Summary = "Atualiza busca alerta")]
+    [SwaggerOperation(Summary = "Atualiza alerta")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -145,11 +184,42 @@ public class AlertController : ControllerBase
             });
         }
 
+        var pet = await _petService.GetByIdAsync(dto.PetId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
+        if (dto.VaccineId.HasValue)
+        {
+            var vaccine = await _vaccineService.GetByIdAsync(dto.VaccineId.Value);
+
+            if (vaccine == null)
+            {
+                return NotFound(new
+                {
+                    message = "Vacina não encontrada"
+                });
+            }
+
+            if (vaccine.PetId != dto.PetId)
+            {
+                return BadRequest(new
+                {
+                    message = "A vacina informada não pertence ao pet informado"
+                });
+            }
+        }
+
         await _service.UpdateAsync(id, dto);
 
         return Ok(new
         {
-            message = "Alerta atualizada com sucesso",
+            message = "Alerta atualizado com sucesso"
         });
     }
     

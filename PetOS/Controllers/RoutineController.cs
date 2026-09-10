@@ -10,10 +10,14 @@ namespace PetOS.Controllers;
 public class RoutineController : ControllerBase
 {
     private readonly IRoutineService _service;
+    private readonly IPetService _petService;
 
-    public RoutineController(IRoutineService service)
+    public RoutineController(
+        IRoutineService service,
+        IPetService petService)
     {
         _service = service;
+        _petService = petService;
     }
 
     /// <summary>
@@ -66,14 +70,25 @@ public class RoutineController : ControllerBase
     }
 
     /// <summary>
-    /// Busca rotinas de um pet especifico 
+    /// Busca rotinas de um pet especifico
     /// </summary>
     [HttpGet("pet/{petId}")]
     [SwaggerOperation(Summary = "Busca rotina por pet específico")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByPetId(long petId)
     {
+        var pet = await _petService.GetByIdAsync(petId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
         var routines = await _service.GetByPetIdAsync(petId);
 
         if (!routines.Any())
@@ -95,6 +110,7 @@ public class RoutineController : ControllerBase
     [SwaggerOperation(Summary = "Adiciona a rotina")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create(RoutineCreateDto dto)
     {
         if (!ModelState.IsValid)
@@ -105,6 +121,16 @@ public class RoutineController : ControllerBase
             });
         }
 
+        var pet = await _petService.GetByIdAsync(dto.PetId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
         var created = await _service.CreateAsync(dto);
 
         return CreatedAtAction(
@@ -112,7 +138,7 @@ public class RoutineController : ControllerBase
             new { id = created.Id },
             new
             {
-                message = "Rotina criado com sucesso",
+                message = "Rotina criada com sucesso",
                 data = created
             });
     }
@@ -145,11 +171,21 @@ public class RoutineController : ControllerBase
             });
         }
 
+        var pet = await _petService.GetByIdAsync(dto.PetId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
         await _service.UpdateAsync(id, dto);
 
         return Ok(new
         {
-            message = "Rotina atualizado com sucesso",
+            message = "Rotina atualizada com sucesso"
         });
     }
 

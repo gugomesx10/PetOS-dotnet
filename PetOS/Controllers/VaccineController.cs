@@ -10,10 +10,14 @@ namespace PetOS.Controllers;
 public class VaccineController : ControllerBase
 {
     private readonly IVaccineService _service;
+    private readonly IPetService _petService;
 
-    public VaccineController(IVaccineService service)
+    public VaccineController(
+        IVaccineService service,
+        IPetService petService)
     {
         _service = service;
+        _petService = petService;
     }
 
     /// <summary>
@@ -65,14 +69,25 @@ public class VaccineController : ControllerBase
     }
 
     /// <summary>
-    /// Busca a vacina de um pet especifico
+    /// Busca as vacinas de um pet especifico
     /// </summary>
     [HttpGet("pet/{petId}")]
     [SwaggerOperation(Summary = "Busca as vacinas de um pet específico")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByPetId(long petId)
     {
+        var pet = await _petService.GetByIdAsync(petId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
         var vaccines = await _service.GetByPetIdAsync(petId);
 
         if (!vaccines.Any())
@@ -94,6 +109,7 @@ public class VaccineController : ControllerBase
     [SwaggerOperation(Summary = "Adiciona a vacina no banco")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create(VaccineCreateDto dto)
     {
         if (!ModelState.IsValid)
@@ -104,6 +120,16 @@ public class VaccineController : ControllerBase
             });
         }
 
+        var pet = await _petService.GetByIdAsync(dto.PetId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
         var created = await _service.CreateAsync(dto);
 
         return CreatedAtAction(
@@ -111,7 +137,7 @@ public class VaccineController : ControllerBase
             new { id = created.Id },
             new
             {
-                message = "Vaccina adicionada com sucesso",
+                message = "Vacina adicionada com sucesso",
                 data = created
             });
     }
@@ -144,11 +170,21 @@ public class VaccineController : ControllerBase
             });
         }
 
+        var pet = await _petService.GetByIdAsync(dto.PetId);
+
+        if (pet == null)
+        {
+            return NotFound(new
+            {
+                message = "Pet não encontrado"
+            });
+        }
+
         await _service.UpdateAsync(id, dto);
 
         return Ok(new
         {
-            message = "Vaccina atualizada com sucesso",
+            message = "Vacina atualizada com sucesso"
         });
     }
 

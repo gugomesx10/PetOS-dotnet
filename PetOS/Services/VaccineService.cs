@@ -2,6 +2,7 @@
 using PetOS.Models;
 using PetOS.Repositories.Interfaces;
 using PetOS.Services.Interfaces;
+using PetOS.Observability;
 
 namespace PetOS.Services;
 
@@ -16,6 +17,9 @@ public class VaccineService : IVaccineService
 
     public async Task<IEnumerable<VaccineResponseDto>> GetAllAsync()
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("VaccineService.GetAllAsync");
+        
         var vaccines = await _repository.GetAllAsync();
 
         return vaccines.Select(v => new VaccineResponseDto()
@@ -33,6 +37,9 @@ public class VaccineService : IVaccineService
 
     public async Task<VaccineResponseDto?> GetByIdAsync(long id)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("VaccineService.GetByIdAsync");
+        activity?.SetTag("vaccine.id", id);
         var vaccine = await _repository.GetByIdAsync(id);
 
         if (vaccine == null)
@@ -53,6 +60,10 @@ public class VaccineService : IVaccineService
 
     public async Task<IEnumerable<VaccineResponseDto>> GetByPetIdAsync(long petId)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("VaccineService.GetByPetIdAsync");
+
+        activity?.SetTag("pet.id", petId);
         var vaccines = await _repository.GetByPetIdAsync(petId);
 
         return vaccines.Select(v => new VaccineResponseDto
@@ -70,6 +81,10 @@ public class VaccineService : IVaccineService
 
     public async Task<VaccineResponseDto> CreateAsync(VaccineCreateDto dto)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("VaccineService.CreateAsync");
+
+        activity?.SetTag("pet.id", dto.PetId);
         var vaccine = new Vaccine
         {
             PetId = dto.PetId,
@@ -97,6 +112,10 @@ public class VaccineService : IVaccineService
 
     public async Task UpdateAsync(long id, VaccineCreateDto dto)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("VaccineService.UpdateAsync");
+
+        activity?.SetTag("vaccine.id", id);
         var vaccine = await _repository.GetByIdAsync(id);
 
         if (vaccine == null)
@@ -114,6 +133,10 @@ public class VaccineService : IVaccineService
 
     public async Task DeleteAsync(long id)
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("VaccineService.DeleteAsync");
+
+        activity?.SetTag("vaccine.id", id);
         await _repository.DeleteAsync(id);
     }
 }
