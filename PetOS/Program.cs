@@ -5,12 +5,20 @@ using PetOS.Services;
 using PetOS.Repositories.Interfaces;
 using PetOS.Services.Interfaces;
 using System.Reflection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using PetOS.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options => {
     options.UseOracle(builder.Configuration.GetConnectionString("Oracle"));
 });
+
+// healtcheks
+builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>(
+        name: "oracle",
+        tags: new[] { "ready" }
+    );
 
 // Services
 builder.Services.AddScoped<IAlertService, AlertService>();
@@ -46,6 +54,18 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
 
 app.MapControllers();
 
