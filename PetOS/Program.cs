@@ -7,8 +7,31 @@ using PetOS.Services.Interfaces;
 using System.Reflection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using PetOS.HealthChecks;
+using Serilog;
+using Serilog.Events;
+using PetOS.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+const string logTemplate =
+    "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {Level:u3}] " +
+    "[CorrelationId:{CorrelationId}] " +
+    "{Message:lj}{NewLine}{Exception}";
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+        .WriteTo.Console(
+            outputTemplate: logTemplate
+        )
+        .WriteTo.File(
+            "logs/petos-.log",
+            rollingInterval: RollingInterval.Day,
+            outputTemplate: logTemplate
+        );
+});
 
 builder.Services.AddDbContext<AppDbContext>(options => {
     options.UseOracle(builder.Configuration.GetConnectionString("Oracle"));
@@ -52,6 +75,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.GetLevel = (httpContext, elapsed, exception) =>
+    {
+        if (exception != null || httpContext.Response.StatusCode >= 500)
+        {
+            return Serilog.Events.LogEventLevel.Error;
+        }
+
+        if (httpContext.Response.StatusCode >= 400)
+        {
+            return Serilog.Events.LogEventLevel.Warning;
+        }
+
+        return Serilog.Events.LogEventLevel.Information;
+    };
+});
 
 app.UseAuthorization();
 
