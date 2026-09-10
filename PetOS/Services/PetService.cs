@@ -2,6 +2,7 @@
 using PetOS.Models;
 using PetOS.Repositories.Interfaces;
 using PetOS.Services.Interfaces;
+using PetOS.Observability;
 
 namespace PetOS.Services;
 
@@ -15,6 +16,9 @@ public class PetService : IPetService
 
     public async Task<IEnumerable<PetResponseDto>> GetAllSync()
     {
+        
+        using var activity = PetOsTelemetry.ActivitySource.StartActivity("PetService.GetAllSync");
+        
         var pets = await _repository.GetAllAsync();
 
         return pets.Select(p => new PetResponseDto()

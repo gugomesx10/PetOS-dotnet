@@ -2,6 +2,7 @@
 using PetOS.Repositories.Interfaces;
 using PetOS.Data;
 using Microsoft.EntityFrameworkCore;
+using PetOS.Observability;
 
 namespace PetOS.Repositories;
 
@@ -14,8 +15,11 @@ public class PetRepository : IPetRepository
         _context = context;
     }
     
-    public async Task<IEnumerable<Pet>>  GetAllAsync()
+    public async Task<IEnumerable<Pet>> GetAllAsync()
     {
+        using var activity =
+            PetOsTelemetry.ActivitySource.StartActivity("PetRepository.GetAllAsync");
+
         return await _context.Pets.ToListAsync();
     }
 
