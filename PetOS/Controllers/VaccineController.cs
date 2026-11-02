@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PetOS.Dto.Vaccine;
 using PetOS.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace PetOS.Controllers;
 
+/// <summary>
+/// Gerencia o histórico de vacinação dos animais.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class VaccineController : ControllerBase
@@ -21,32 +25,44 @@ public class VaccineController : ControllerBase
     }
 
     /// <summary>
-    /// Lista todas vacinas
+    /// Lista todas as vacinas cadastradas.
     /// </summary>
+    /// <response code="200">Vacinas encontradas com sucesso.</response>
+    /// <response code="204">Nenhuma vacina cadastrada.</response>
     [HttpGet]
-    [SwaggerOperation(Summary = "Lista todas vacinas")]
+    [SwaggerOperation(
+        Summary = "Listar todas as vacinas",
+        Description = "Consulta todos os registros de vacinação disponíveis no PetOS.",
+        OperationId = "Vaccines_GetAll")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> GetAll()
     {
-        var vacines = await _service.GetAllAsync();
-        
-        if(!vacines.Any())
+        var vaccines = await _service.GetAllAsync();
+
+        if (!vaccines.Any())
         {
             return NoContent();
         }
+
         return Ok(new
         {
             message = "Vacinas encontradas com sucesso",
-            data = vacines
+            data = vaccines
         });
     }
 
     /// <summary>
-    /// Faz uma buscar pela vacina ao inserir Id
+    /// Consulta uma vacina pelo identificador.
     /// </summary>
+    /// <param name="id">Identificador da vacina.</param>
+    /// <response code="200">Vacina encontrada com sucesso.</response>
+    /// <response code="404">Vacina não encontrada.</response>
     [HttpGet("{id}")]
-    [SwaggerOperation(Summary = "Busca vacina por Id")]
+    [SwaggerOperation(
+        Summary = "Buscar vacina por ID",
+        Description = "Retorna os dados de uma vacina a partir do identificador informado.",
+        OperationId = "Vaccines_GetById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(long id)
@@ -69,10 +85,20 @@ public class VaccineController : ControllerBase
     }
 
     /// <summary>
-    /// Busca as vacinas de um pet especifico
+    /// Lista as vacinas de um pet.
     /// </summary>
+    /// <remarks>
+    /// Verifica se o animal existe e consulta seus registros de vacinação.
+    /// </remarks>
+    /// <param name="petId">Identificador do pet.</param>
+    /// <response code="200">Vacinas encontradas com sucesso.</response>
+    /// <response code="204">O pet não possui vacinas cadastradas.</response>
+    /// <response code="404">Pet não encontrado.</response>
     [HttpGet("pet/{petId}")]
-    [SwaggerOperation(Summary = "Busca as vacinas de um pet específico")]
+    [SwaggerOperation(
+        Summary = "Listar vacinas de um pet",
+        Description = "Consulta o histórico de vacinação de um animal específico.",
+        OperationId = "Vaccines_GetByPetId")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -103,12 +129,26 @@ public class VaccineController : ControllerBase
     }
 
     /// <summary>
-    /// Cria a vacina e insere ao banco
+    /// Registra uma vacina para um pet.
     /// </summary>
+    /// <remarks>
+    /// Verifica a existência do animal antes de registrar a vacinação.
+    /// Requer autenticação por token JWT.
+    /// </remarks>
+    /// <param name="dto">Dados da vacina e identificador do pet.</param>
+    /// <response code="201">Vacina cadastrada com sucesso.</response>
+    /// <response code="400">Dados inválidos.</response>
+    /// <response code="401">Usuário não autenticado.</response>
+    /// <response code="404">Pet não encontrado.</response>
+    [Authorize]
     [HttpPost]
-    [SwaggerOperation(Summary = "Adiciona a vacina no banco")]
+    [SwaggerOperation(
+        Summary = "Cadastrar vacina",
+        Description = "Registra uma vacina associada a um animal existente.",
+        OperationId = "Vaccines_Create")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create(VaccineCreateDto dto)
     {
@@ -143,13 +183,28 @@ public class VaccineController : ControllerBase
     }
 
     /// <summary>
-    /// Atualiza a vacina do pet
+    /// Atualiza um registro de vacinação.
     /// </summary>
+    /// <remarks>
+    /// Verifica se a vacina e o pet informado existem antes da atualização.
+    /// Requer autenticação por token JWT.
+    /// </remarks>
+    /// <param name="id">Identificador da vacina.</param>
+    /// <param name="dto">Dados atualizados da vacinação.</param>
+    /// <response code="200">Vacina atualizada com sucesso.</response>
+    /// <response code="400">Dados inválidos.</response>
+    /// <response code="401">Usuário não autenticado.</response>
+    /// <response code="404">Vacina ou pet não encontrado.</response>
+    [Authorize]
     [HttpPut("{id}")]
-    [SwaggerOperation(Summary = "Atualiza a vacina por Id")]
+    [SwaggerOperation(
+        Summary = "Atualizar vacina",
+        Description = "Altera as informações de uma vacina já cadastrada.",
+        OperationId = "Vaccines_Update")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(long id, VaccineCreateDto dto)
     {
         if (!ModelState.IsValid)
@@ -189,13 +244,25 @@ public class VaccineController : ControllerBase
     }
 
     /// <summary>
-    /// Deleta a vacina 
+    /// Exclui um registro de vacinação.
     /// </summary>
+    /// <remarks>
+    /// Remove uma vacina cadastrada.
+    /// Requer autenticação por token JWT.
+    /// </remarks>
+    /// <param name="id">Identificador da vacina.</param>
+    /// <response code="200">Vacina excluída com sucesso.</response>
+    /// <response code="401">Usuário não autenticado.</response>
+    /// <response code="404">Vacina não encontrada.</response>
+    [Authorize]
     [HttpDelete("{id}")]
-    [SwaggerOperation(Summary = "Remover a vacina por Id")]
+    [SwaggerOperation(
+        Summary = "Excluir vacina",
+        Description = "Remove um registro de vacinação pelo identificador.",
+        OperationId = "Vaccines_Delete")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(long id)
     {
         var vaccine = await _service.GetByIdAsync(id);
@@ -215,5 +282,4 @@ public class VaccineController : ControllerBase
             message = "Vacina removida com sucesso"
         });
     }
-
 }

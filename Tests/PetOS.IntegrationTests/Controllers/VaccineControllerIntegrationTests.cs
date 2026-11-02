@@ -19,7 +19,7 @@ public class VaccineControllerIntegrationTests
         PetOsWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient();
     }
 
     private void ResetDatabase()

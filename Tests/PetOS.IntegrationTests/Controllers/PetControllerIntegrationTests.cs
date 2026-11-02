@@ -18,7 +18,7 @@ public class PetControllerIntegrationTests
         PetOsWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient();
     }
 
     private void ResetDatabase()
@@ -44,8 +44,7 @@ public class PetControllerIntegrationTests
         // Assert
         Assert.Equal(
             HttpStatusCode.NoContent,
-            response.StatusCode
-        );
+            response.StatusCode);
     }
 
     [Fact]
@@ -55,14 +54,12 @@ public class PetControllerIntegrationTests
         ResetDatabase();
 
         // Act
-        var response =
-            await _client.GetAsync("/api/Pet/999999");
+        var response = await _client.GetAsync("/api/Pet/999999");
 
         // Assert
         Assert.Equal(
             HttpStatusCode.NotFound,
-            response.StatusCode
-        );
+            response.StatusCode);
     }
 
     [Fact]
@@ -82,14 +79,13 @@ public class PetControllerIntegrationTests
         };
 
         // Act
-        var response =
-            await _client.PostAsJsonAsync("/api/Pet", dto);
+        var response = await _client.PostAsJsonAsync(
+            "/api/Pet", dto);
 
         // Assert
         Assert.Equal(
             HttpStatusCode.Created,
-            response.StatusCode
-        );
+            response.StatusCode);
     }
 
     [Fact]
@@ -108,11 +104,10 @@ public class PetControllerIntegrationTests
             weight = 5
         };
 
-        var createResponse =
-            await _client.PostAsJsonAsync("/api/Pet", dto);
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Pet", dto);
 
-        var json =
-            await createResponse.Content.ReadAsStringAsync();
+        var json = await createResponse.Content.ReadAsStringAsync();
 
         using var document = JsonDocument.Parse(json);
 
@@ -122,17 +117,14 @@ public class PetControllerIntegrationTests
             .GetInt64();
 
         // Act
-        var response =
-            await _client.GetAsync($"/api/Pet/{id}");
+        var response = await _client.GetAsync($"/api/Pet/{id}");
 
         // Assert
         Assert.Equal(
             HttpStatusCode.OK,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var responseBody =
-            await response.Content.ReadAsStringAsync();
+        var responseBody = await response.Content.ReadAsStringAsync();
 
         Assert.Contains("Luna", responseBody);
         Assert.Contains("Gato", responseBody);
@@ -154,11 +146,10 @@ public class PetControllerIntegrationTests
             weight = 25
         };
 
-        var createResponse =
-            await _client.PostAsJsonAsync("/api/Pet", createDto);
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Pet", createDto);
 
-        var json =
-            await createResponse.Content.ReadAsStringAsync();
+        var json = await createResponse.Content.ReadAsStringAsync();
 
         using var document = JsonDocument.Parse(json);
 
@@ -178,17 +169,13 @@ public class PetControllerIntegrationTests
         };
 
         // Act
-        var response =
-            await _client.PutAsJsonAsync(
-                $"/api/Pet/{id}",
-                updateDto
-            );
+        var response = await _client.PutAsJsonAsync(
+            $"/api/Pet/{id}", updateDto);
 
         // Assert
         Assert.Equal(
             HttpStatusCode.OK,
-            response.StatusCode
-        );
+            response.StatusCode);
     }
 
     [Fact]
@@ -207,11 +194,10 @@ public class PetControllerIntegrationTests
             weight = 12
         };
 
-        var createResponse =
-            await _client.PostAsJsonAsync("/api/Pet", dto);
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Pet", dto);
 
-        var json =
-            await createResponse.Content.ReadAsStringAsync();
+        var json = await createResponse.Content.ReadAsStringAsync();
 
         using var document = JsonDocument.Parse(json);
 
@@ -221,21 +207,19 @@ public class PetControllerIntegrationTests
             .GetInt64();
 
         // Act
-        var response =
-            await _client.DeleteAsync($"/api/Pet/{id}");
+        var response = await _client.DeleteAsync(
+            $"/api/Pet/{id}");
 
         // Assert
         Assert.Equal(
             HttpStatusCode.OK,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var getResponse =
-            await _client.GetAsync($"/api/Pet/{id}");
+        var getResponse = await _client.GetAsync(
+            $"/api/Pet/{id}");
 
         Assert.Equal(
             HttpStatusCode.NotFound,
-            getResponse.StatusCode
-        );
+            getResponse.StatusCode);
     }
 }

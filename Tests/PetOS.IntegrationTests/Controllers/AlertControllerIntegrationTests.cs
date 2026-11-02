@@ -20,7 +20,7 @@ public class AlertControllerIntegrationTests
         PetOsWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient();
     }
 
     private void ResetDatabase()
@@ -46,11 +46,10 @@ public class AlertControllerIntegrationTests
             weight = 12
         };
 
-        var response =
-            await _client.PostAsJsonAsync("/api/Pet", pet);
+        var response = await _client.PostAsJsonAsync(
+            "/api/Pet", pet);
 
-        var json =
-            await response.Content.ReadAsStringAsync();
+        var json = await response.Content.ReadAsStringAsync();
 
         using var document = JsonDocument.Parse(json);
 
@@ -76,11 +75,10 @@ public class AlertControllerIntegrationTests
             AlertDate = DateTime.UtcNow
         };
 
-        var createResponse =
-            await _client.PostAsJsonAsync("/api/Alert", dto);
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Alert", dto);
 
-        var json =
-            await createResponse.Content.ReadAsStringAsync();
+        var json = await createResponse.Content.ReadAsStringAsync();
 
         using var document = JsonDocument.Parse(json);
 
@@ -90,27 +88,21 @@ public class AlertControllerIntegrationTests
             .GetInt64();
 
         // Act
-        var response =
-            await _client.GetAsync($"/api/Alert/{alertId}");
+        var response = await _client.GetAsync(
+            $"/api/Alert/{alertId}");
 
         // Assert
         Assert.Equal(
             HttpStatusCode.Created,
-            createResponse.StatusCode
-        );
+            createResponse.StatusCode);
 
         Assert.Equal(
             HttpStatusCode.OK,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var body =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Contains(
-            "Hora do medicamento",
-            body
-        );
+        Assert.Contains("Hora do medicamento", body);
     }
 
     [Fact]
@@ -120,14 +112,13 @@ public class AlertControllerIntegrationTests
         ResetDatabase();
 
         // Act
-        var response =
-            await _client.GetAsync("/api/Alert/999999");
+        var response = await _client.GetAsync(
+            "/api/Alert/999999");
 
         // Assert
         Assert.Equal(
             HttpStatusCode.NotFound,
-            response.StatusCode
-        );
+            response.StatusCode);
     }
 
     [Fact]
@@ -145,22 +136,17 @@ public class AlertControllerIntegrationTests
         };
 
         // Act
-        var response =
-            await _client.PostAsJsonAsync("/api/Alert", dto);
+        var response = await _client.PostAsJsonAsync(
+            "/api/Alert", dto);
 
         // Assert
         Assert.Equal(
             HttpStatusCode.NotFound,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var body =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Contains(
-            "Pet não encontrado",
-            body
-        );
+        Assert.Contains("Pet não encontrado", body);
     }
 
     [Fact]
@@ -180,22 +166,17 @@ public class AlertControllerIntegrationTests
         };
 
         // Act
-        var response =
-            await _client.PostAsJsonAsync("/api/Alert", dto);
+        var response = await _client.PostAsJsonAsync(
+            "/api/Alert", dto);
 
         // Assert
         Assert.Equal(
             HttpStatusCode.NotFound,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var body =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
-        Assert.Contains(
-            "Vacina não encontrada",
-            body
-        );
+        Assert.Contains("Vacina não encontrada", body);
     }
 
     [Fact]
@@ -204,11 +185,8 @@ public class AlertControllerIntegrationTests
         // Arrange
         ResetDatabase();
 
-        var thorId =
-            await CreatePetAsync("Thor");
-
-        var lunaId =
-            await CreatePetAsync("Luna");
+        var thorId = await CreatePetAsync("Thor");
+        var lunaId = await CreatePetAsync("Luna");
 
         var vaccineDto = new VaccineCreateDto
         {
@@ -220,14 +198,11 @@ public class AlertControllerIntegrationTests
             Dose = "Primeira dose"
         };
 
-        var vaccineResponse =
-            await _client.PostAsJsonAsync(
-                "/api/Vaccine",
-                vaccineDto
-            );
+        var vaccineResponse = await _client.PostAsJsonAsync(
+            "/api/Vaccine", vaccineDto);
 
-        var vaccineJson =
-            await vaccineResponse.Content.ReadAsStringAsync();
+        var vaccineJson = await vaccineResponse.Content
+            .ReadAsStringAsync();
 
         using var vaccineDocument =
             JsonDocument.Parse(vaccineJson);
@@ -246,24 +221,18 @@ public class AlertControllerIntegrationTests
         };
 
         // Act
-        var response =
-            await _client.PostAsJsonAsync(
-                "/api/Alert",
-                alertDto
-            );
+        var response = await _client.PostAsJsonAsync(
+            "/api/Alert", alertDto);
 
         // Assert
         Assert.Equal(
             HttpStatusCode.BadRequest,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var body =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
         Assert.Contains(
             "A vacina informada não pertence ao pet informado",
-            body
-        );
+            body);
     }
 }
