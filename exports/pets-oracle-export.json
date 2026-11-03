@@ -1,0 +1,19 @@
+{
+  "source" : "Oracle",
+  "exportedAtUtc" : { "$date" : { "$numberLong" : "1793668529197" } },
+  "totalPets" : { "$numberInt" : "1" },
+  "pets" : [{
+      "_id" : "oracle-pet-1",
+      "oracleId" : { "$numberLong" : "1" },
+      "name" : "Ana",
+      "species" : "Dog",
+      "breed" : "Maltês",
+      "birthDate" : { "$date" : { "$numberLong" : "1789071571745" } },
+      "gender" : "Female",
+      "weight" : { "$numberDecimal" : "3.2" },
+      "createdAtUtc" : { "$date" : { "$numberLong" : "1789071606461" } },
+      "vaccines" : [],
+      "routines" : [],
+      "alerts" : []
+    }]
+}

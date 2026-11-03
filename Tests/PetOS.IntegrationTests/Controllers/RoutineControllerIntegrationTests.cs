@@ -19,7 +19,7 @@ public class RoutineControllerIntegrationTests
         PetOsWebApplicationFactory factory)
     {
         _factory = factory;
-        _client = factory.CreateClient();
+        _client = factory.CreateAuthenticatedClient();
     }
 
     private void ResetDatabase()
@@ -45,8 +45,8 @@ public class RoutineControllerIntegrationTests
             weight = 5
         };
 
-        var response =
-            await _client.PostAsJsonAsync("/api/Pet", pet);
+        var response = await _client.PostAsJsonAsync(
+            "/api/Pet", pet);
 
         var json = await response.Content.ReadAsStringAsync();
 
@@ -75,11 +75,10 @@ public class RoutineControllerIntegrationTests
             Notes = "Sem alterações"
         };
 
-        var createResponse =
-            await _client.PostAsJsonAsync("/api/Routine", dto);
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/Routine", dto);
 
-        var json =
-            await createResponse.Content.ReadAsStringAsync();
+        var json = await createResponse.Content.ReadAsStringAsync();
 
         using var document = JsonDocument.Parse(json);
 
@@ -89,12 +88,17 @@ public class RoutineControllerIntegrationTests
             .GetInt64();
 
         // Act
-        var response =
-            await _client.GetAsync($"/api/Routine/{routineId}");
+        var response = await _client.GetAsync(
+            $"/api/Routine/{routineId}");
 
         // Assert
-        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.Created,
+            createResponse.StatusCode);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
 
         var body = await response.Content.ReadAsStringAsync();
 
@@ -108,13 +112,15 @@ public class RoutineControllerIntegrationTests
         ResetDatabase();
 
         // Act
-        var response =
-            await _client.GetAsync("/api/Routine/999999");
+        var response = await _client.GetAsync(
+            "/api/Routine/999999");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            response.StatusCode);
     }
-    
+
     [Fact]
     public async Task GetByPetId_PetDoesNotExist_ReturnsNotFound()
     {
@@ -122,14 +128,13 @@ public class RoutineControllerIntegrationTests
         ResetDatabase();
 
         // Act
-        var response =
-            await _client.GetAsync("/api/Routine/pet/999999");
+        var response = await _client.GetAsync(
+            "/api/Routine/pet/999999");
 
         // Assert
         Assert.Equal(
             HttpStatusCode.NotFound,
-            response.StatusCode
-        );
+            response.StatusCode);
     }
 
     [Fact]
@@ -148,17 +153,15 @@ public class RoutineControllerIntegrationTests
         };
 
         // Act
-        var response =
-            await _client.PostAsJsonAsync("/api/Routine", dto);
+        var response = await _client.PostAsJsonAsync(
+            "/api/Routine", dto);
 
         // Assert
         Assert.Equal(
             HttpStatusCode.NotFound,
-            response.StatusCode
-        );
+            response.StatusCode);
 
-        var body =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
         Assert.Contains("Pet não encontrado", body);
     }

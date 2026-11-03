@@ -9,11 +9,12 @@ public class AppDbContext : DbContext
         : base(options)
     {
     }
-    
+
     public DbSet<Pet> Pets { get; set; }
     public DbSet<Vaccine> Vaccines { get; set; }
     public DbSet<RoutineRecord> RoutineRecords { get; set; }
-    public DbSet<Alert>  Alerts { get; set; }
+    public DbSet<Alert> Alerts { get; set; }
+    public DbSet<AppUser> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,5 +23,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Pet>()
             .Property(p => p.Weight)
             .HasPrecision(10, 2);
+
+        modelBuilder.Entity<AppUser>()
+            .HasIndex(user => user.Email)
+            .IsUnique();
     }
 }
