@@ -19,6 +19,7 @@ using PetOS.Services;
 using PetOS.Services.Interfaces;
 using Serilog;
 using Serilog.Events;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,8 +114,14 @@ builder.Services.AddScoped<IVaccineRepository, VaccineRepository>();
 builder.Services.AddScoped<IRoutineRepository, RoutineRepository>();
 builder.Services.AddScoped<IAlertRepository, AlertRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-
-
+// MongoDB
+builder.Services.AddScoped<IPetActivityRepository, PetActivityRepository>();
+builder.Services.AddScoped<IPetActivityService, PetActivityService>();
+// Consultas paginadas
+builder.Services.AddScoped<IResourceReadRepository, ResourceReadRepository>();
+builder.Services.AddScoped<IResourceReadService, ResourceReadService>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
@@ -171,7 +178,7 @@ builder.Services.AddSwaggerGen(options =>
             "Vaccine" => "03 - Vacinação",
             "Routine" => "04 - Rotinas e Cuidados",
             "Alert" => "05 - Alertas",
-            _ => "06 - Outros"
+            _ => "06 - PetActivity - MongoDB "
         };
 
         return new[] { category };
@@ -239,7 +246,45 @@ builder.Services
             .AddPrometheusExporter();
     });
 
+
+// MongoDB 
+builder.Services.AddSingleton<IMongoClient>(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+
+    var connectionString = configuration["MongoDb:ConnectionString"];
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException(
+            "A connection string do MongoDB não foi configurada."
+        );
+    }
+
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddSingleton<IMongoDatabase>(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+
+    var databaseName = configuration["MongoDb:DatabaseName"];
+
+    if (string.IsNullOrWhiteSpace(databaseName))
+    {
+        throw new InvalidOperationException(
+            "O nome do banco MongoDB não foi configurado."
+        );
+    }
+
+    var mongoClient = provider.GetRequiredService<IMongoClient>();
+
+    return mongoClient.GetDatabase(databaseName);
+});
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

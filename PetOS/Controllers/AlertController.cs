@@ -1,11 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PetOS.Dto.Alert;
+using PetOS.Dto.Common;
+using PetOS.Hypermedia;
 using PetOS.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace PetOS.Controllers;
 
+/// <summary>
+/// Gerencia os alertas e lembretes de cuidados dos animais.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AlertController : ControllerBase
@@ -13,44 +18,41 @@ public class AlertController : ControllerBase
     private readonly IAlertService _service;
     private readonly IPetService _petService;
     private readonly IVaccineService _vaccineService;
+    private readonly IResourceReadService _queries;
 
     public AlertController(
         IAlertService service,
         IPetService petService,
-        IVaccineService vaccineService)
+        IVaccineService vaccineService,
+        IResourceReadService queries)
     {
         _service = service;
         _petService = petService;
         _vaccineService = vaccineService;
+        _queries = queries;
     }
 
     /// <summary>
     /// Lista os alertas cadastrados.
     /// </summary>
+    /// <param name="query">Filtros, paginação e ordenação.</param>
     /// <response code="200">Alertas encontrados.</response>
-    /// <response code="204">Nenhum alerta cadastrado.</response>
+    /// <response code="204">Nenhum alerta encontrado.</response>
+    /// <response code="400">Parâmetros inválidos.</response>
     [HttpGet]
     [SwaggerOperation(
         Summary = "Listar alertas",
-        Description = "Consulta todos os alertas registrados no PetOS. Retorna uma lista de alertas ou 204 quando não existem registros.",
-        OperationId = "Alerts_GetAll"
-    )]
+        Description = "Consulta alertas com filtros por pet e status de leitura, paginação, ordenação e links HATEOAS.",
+        OperationId = "Alerts_GetAll")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] AlertQuery query)
     {
-        var alerts = await _service.GetAllAsync();
+        var result = await _queries.GetAlertsAsync(query);
 
-        if (!alerts.Any())
-        {
-            return NoContent();
-        }
-
-        return Ok(new
-        {
-            message = "Alertas encontrados com sucesso",
-            data = alerts
-        });
+        return PageResult(result);
     }
 
     /// <summary>
@@ -61,10 +63,9 @@ public class AlertController : ControllerBase
     /// <response code="404">Alerta não encontrado.</response>
     [HttpGet("{id}")]
     [SwaggerOperation(
-        Summary = "Consultar alerta por ID",
-        Description = "Busca os detalhes de um alerta utilizando seu identificador. Retorna 404 quando o registro não existe.",
-        OperationId = "Alerts_GetById"
-    )]
+        Summary = "Buscar alerta por ID",
+        Description = "Retorna os dados de um alerta e os links para operações relacionadas.",
+        OperationId = "Alerts_GetById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(long id)
@@ -79,40 +80,37 @@ public class AlertController : ControllerBase
             });
         }
 
-        return Ok(new
-        {
-            message = "Alerta encontrado com sucesso",
-            data = alert
-        });
+        return Ok(Hateoas.Item(
+            "Alert",
+            alert.Id,
+            alert,
+            "Alerta encontrado com sucesso"
+        ));
     }
 
     /// <summary>
     /// Lista os alertas não lidos.
     /// </summary>
+    /// <param name="query">Filtros, paginação e ordenação.</param>
     /// <response code="200">Alertas não lidos encontrados.</response>
     /// <response code="204">Nenhum alerta não lido.</response>
+    /// <response code="400">Parâmetros inválidos.</response>
     [HttpGet("unread")]
     [SwaggerOperation(
         Summary = "Listar alertas não lidos",
-        Description = "Retorna os alertas que ainda não foram marcados como lidos. Caso não existam alertas pendentes de leitura, retorna 204.",
-        OperationId = "Alerts_GetUnread"
-    )]
+        Description = "Retorna apenas os alertas pendentes de leitura, com filtros adicionais e paginação.",
+        OperationId = "Alerts_GetUnread")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetUnread()
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetUnread(
+        [FromQuery] AlertQuery query)
     {
-        var alerts = await _service.GetUnreadAsync();
+        query.IsRead = false;
 
-        if (!alerts.Any())
-        {
-            return NoContent();
-        }
+        var result = await _queries.GetAlertsAsync(query);
 
-        return Ok(new
-        {
-            message = "Alertas encontrados com sucesso",
-            data = alerts
-        });
+        return PageResult(result);
     }
 
     /// <summary>
@@ -121,23 +119,25 @@ public class AlertController : ControllerBase
     /// <remarks>
     /// O pet deve existir. Caso uma vacina seja informada,
     /// ela também deve existir e pertencer ao mesmo pet.
+    /// Requer autenticação JWT.
     /// </remarks>
-    /// <response code="201">Alerta cadastrado com sucesso.</response>
+    /// <param name="dto">Dados do alerta.</param>
+    /// <response code="201">Alerta cadastrado.</response>
     /// <response code="400">Dados inválidos ou vacina de outro pet.</response>
-    /// <response code="401">Autenticação necessária.</response>
+    /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Pet ou vacina não encontrado.</response>
     [Authorize]
     [HttpPost]
     [SwaggerOperation(
         Summary = "Cadastrar alerta",
-        Description = "Registra um alerta associado a um pet. A associação com uma vacina é opcional, mas, quando informada, a vacina deve pertencer ao pet indicado.",
-        OperationId = "Alerts_Create"
-    )]
+        Description = "Registra um alerta associado a um pet. A vacina é opcional, mas deve pertencer ao mesmo animal.",
+        OperationId = "Alerts_Create")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create(AlertCreateDto dto)
+    public async Task<IActionResult> Create(
+        [FromBody] AlertCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -185,11 +185,12 @@ public class AlertController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { id = created.Id },
-            new
-            {
-                message = "Alerta criado com sucesso",
-                data = created
-            }
+            Hateoas.Item(
+                "Alert",
+                created.Id,
+                created,
+                "Alerta criado com sucesso"
+            )
         );
     }
 
@@ -197,26 +198,29 @@ public class AlertController : ControllerBase
     /// Atualiza um alerta existente.
     /// </summary>
     /// <remarks>
-    /// Valida a existência do alerta e do pet.
-    /// Caso uma vacina seja informada, verifica se pertence ao pet.
+    /// Verifica a existência do alerta e do pet.
+    /// Se houver vacina associada, valida seu vínculo com o animal.
+    /// Requer autenticação JWT.
     /// </remarks>
     /// <param name="id">Identificador do alerta.</param>
+    /// <param name="dto">Dados atualizados.</param>
     /// <response code="200">Alerta atualizado.</response>
     /// <response code="400">Dados inválidos ou associação inconsistente.</response>
-    /// <response code="401">Autenticação necessária.</response>
+    /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Alerta, pet ou vacina não encontrado.</response>
     [Authorize]
     [HttpPut("{id}")]
     [SwaggerOperation(
         Summary = "Atualizar alerta",
-        Description = "Atualiza um alerta existente após validar o pet e a vacina associada, garantindo a integridade dos relacionamentos.",
-        OperationId = "Alerts_Update"
-    )]
+        Description = "Atualiza um alerta após validar o pet e a vacina associada.",
+        OperationId = "Alerts_Update")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(long id, AlertCreateDto dto)
+    public async Task<IActionResult> Update(
+        long id,
+        [FromBody] AlertCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -273,24 +277,28 @@ public class AlertController : ControllerBase
 
         return Ok(new
         {
-            message = "Alerta atualizado com sucesso"
+            message = "Alerta atualizado com sucesso",
+            links = Hateoas.ForItem("Alert", id)
         });
     }
 
     /// <summary>
     /// Exclui um alerta pelo identificador.
     /// </summary>
+    /// <remarks>
+    /// Remove um alerta existente.
+    /// Requer autenticação JWT.
+    /// </remarks>
     /// <param name="id">Identificador do alerta.</param>
     /// <response code="200">Alerta excluído.</response>
-    /// <response code="401">Autenticação necessária.</response>
+    /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Alerta não encontrado.</response>
     [Authorize]
     [HttpDelete("{id}")]
     [SwaggerOperation(
         Summary = "Excluir alerta",
-        Description = "Remove um alerta existente a partir de seu identificador. Retorna 404 quando o alerta informado não existe.",
-        OperationId = "Alerts_Delete"
-    )]
+        Description = "Remove um alerta e retorna links para a coleção.",
+        OperationId = "Alerts_Delete")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -302,7 +310,7 @@ public class AlertController : ControllerBase
         {
             return NotFound(new
             {
-                message = "Alerta não encontrado."
+                message = "Alerta não encontrado"
             });
         }
 
@@ -310,7 +318,24 @@ public class AlertController : ControllerBase
 
         return Ok(new
         {
-            message = "Alerta removido com sucesso."
+            message = "Alerta removido com sucesso",
+            links = Hateoas.ForCollection("Alert")
         });
+    }
+
+    private IActionResult PageResult(
+        PagedResult<AlertResponseDto> result)
+    {
+        if (result.TotalCount == 0)
+        {
+            return NoContent();
+        }
+
+        return Ok(Hateoas.Page(
+            Request,
+            "Alert",
+            result,
+            "Alertas encontrados com sucesso"
+        ));
     }
 }

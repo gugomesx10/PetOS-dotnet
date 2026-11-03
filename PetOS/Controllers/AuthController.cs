@@ -7,6 +7,9 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace PetOS.Controllers;
 
+/// <summary>
+/// Gerencia o cadastro e a autenticação de usuários no PetOS.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -19,12 +22,14 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Cadastra um usuário.
+    /// Cadastra um usuário no sistema.
     /// </summary>
     /// <remarks>
     /// Cria uma conta com nome, e-mail e senha.
     /// O e-mail deve ser único e a senha é armazenada como hash.
+    /// Não exige autenticação prévia.
     /// </remarks>
+    /// <param name="request">Dados necessários para o cadastro.</param>
     /// <response code="201">Usuário cadastrado com sucesso.</response>
     /// <response code="400">Dados de cadastro inválidos.</response>
     /// <response code="409">E-mail já cadastrado.</response>
@@ -32,9 +37,8 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     [SwaggerOperation(
         Summary = "Cadastrar usuário",
-        Description = "Cria uma conta no PetOS. Valida os dados informados, impede e-mails duplicados e armazena a senha de forma protegida.",
-        OperationId = "Auth_Register"
-    )]
+        Description = "Cria uma conta no PetOS, valida os dados e impede o cadastro de e-mails duplicados.",
+        OperationId = "Auth_Register")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -65,19 +69,20 @@ public class AuthController : ControllerBase
     /// Autentica um usuário.
     /// </summary>
     /// <remarks>
-    /// Valida as credenciais e retorna um token JWT
-    /// para acesso aos endpoints protegidos.
+    /// Valida as credenciais informadas.
+    /// Quando são válidas, retorna um token JWT
+    /// para acessar os endpoints protegidos.
     /// </remarks>
-    /// <response code="200">Login realizado e token JWT gerado.</response>
+    /// <param name="request">E-mail e senha do usuário.</param>
+    /// <response code="200">Login realizado com sucesso.</response>
     /// <response code="400">Dados de login inválidos.</response>
     /// <response code="401">Credenciais incorretas.</response>
     [AllowAnonymous]
     [HttpPost("login")]
     [SwaggerOperation(
         Summary = "Autenticar usuário",
-        Description = "Valida o e-mail e a senha do usuário. Quando as credenciais são válidas, retorna um token JWT e sua data de expiração.",
-        OperationId = "Auth_Login"
-    )]
+        Description = "Valida o e-mail e a senha e retorna um token JWT e sua data de expiração.",
+        OperationId = "Auth_Login")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -110,18 +115,21 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     [SwaggerOperation(
         Summary = "Consultar usuário autenticado",
-        Description = "Retorna o identificador, o nome e o e-mail do usuário identificado pelo token JWT enviado na requisição.",
-        OperationId = "Auth_GetCurrentUser"
-    )]
+        Description = "Retorna o identificador, nome e e-mail do usuário identificado pelo token JWT.",
+        OperationId = "Auth_GetCurrentUser")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Me()
     {
         return Ok(new
         {
-            id = User.FindFirstValue(ClaimTypes.NameIdentifier),
+            id = User.FindFirstValue(
+                ClaimTypes.NameIdentifier
+            ),
             name = User.Identity?.Name,
-            email = User.FindFirstValue(ClaimTypes.Email)
+            email = User.FindFirstValue(
+                ClaimTypes.Email
+            )
         });
     }
 }

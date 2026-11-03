@@ -1,6 +1,8 @@
 # PetOS API (.NET 8)
 
-API RESTful para gerenciamento de **pets, vacinas, rotinas e alertas**, usando ASP.NET Core Web API com arquitetura em camadas, Entity Framework Core e Oracle.
+API RESTful para gerenciamento de **pets, vacinas, rotinas, alertas e atividades**, desenvolvida em ASP.NET Core Web API com arquitetura em camadas.
+
+O **Oracle** é utilizado para os dados relacionais e o **MongoDB Atlas** para documentos de atividades e snapshots migrados do Oracle. A API oferece autenticação, consultas paginadas, filtros, ordenação, links HATEOAS e tratamento global de exceções.
 
 O projeto também conta com recursos de **monitoramento, observabilidade, logs estruturados, tracing distribuído, métricas e testes automatizados**.
 
@@ -26,6 +28,9 @@ O projeto também conta com recursos de **monitoramento, observabilidade, logs e
 - ASP.NET Core Web API
 - Entity Framework Core
 - Oracle Database (`Oracle.EntityFrameworkCore`)
+- MongoDB Atlas (`MongoDB.Driver`)
+- Autenticação JWT
+- .NET User Secrets
 - Swagger / OpenAPI
 - Health Checks
 - Serilog
@@ -52,11 +57,20 @@ PetOS-dotnet/
 │   │   ├── AppDbContext.cs
 │   │   └── Migrations/
 │   ├── Middleware/
+│   ├── Hypermedia/
 │   ├── Observability/
 │   ├── HealthChecks/
 │   ├── Properties/
 │   ├── Program.cs
 │   └── appsettings.json
+│
+├── Tools/
+│   └── PetOS.DataMigration/
+│       ├── PetOS.DataMigration.csproj
+│       └── Program.cs
+│
+├── exports/
+│   └── pets-oracle-export.json
 │
 ├── Tests/
 │   ├── PetOS.UnitTests/
@@ -208,6 +222,22 @@ O `VaccineId` é opcional, permitindo alertas que não estejam relacionados a um
 
 ---
 
+### PetActivity (MongoDB Atlas)
+
+O histórico de atividades utiliza a coleção `PetOS.pet_activities` do MongoDB Atlas, sem substituir as tabelas relacionais do Oracle.
+
+- `GET /api/PetActivity`
+- `GET /api/PetActivity/{id}`
+- `POST /api/PetActivity`
+- `PUT /api/PetActivity/{id}`
+- `DELETE /api/PetActivity/{id}`
+
+Cada atividade registra um `petId`, um tipo, uma descrição, uma data de criação em UTC e um objeto `metadata` flexível. Esse objeto permite armazenar detalhes diferentes conforme a atividade, como duração, local e condições climáticas.
+
+O módulo segue o fluxo `Controller → Service → Repository → MongoDB`.
+
+---
+
 ## Ordem correta para deletar registros
 
 Para evitar erro de chave estrangeira, siga esta ordem:
@@ -248,6 +278,18 @@ Por último.
 | `400 Bad Request` | Dados inválidos ou inconsistência entre relacionamentos |
 | `404 Not Found` | Recurso ou referência informada não encontrada |
 | `500 Internal Server Error` | Erro inesperado durante o processamento |
+
+---
+
+## Consultas avançadas e HATEOAS
+
+Os recursos de leitura incluem **paginação, filtros e ordenação**, com respostas estruturadas para facilitar o consumo das coleções.
+
+Além disso, a API utiliza **HATEOAS**: quando aplicável, as respostas incluem links que identificam o recurso atual e as operações disponíveis, por exemplo `self`, `collection`, `update` e `delete`.
+
+## Tratamento global de exceções
+
+O middleware centraliza o tratamento de falhas e padroniza os erros HTTP, incluindo informações como `title`, `status`, `detail`, `instance`, `traceId` e `correlationId`. Isso evita expor detalhes internos da aplicação ao cliente.
 
 ---
 
@@ -446,6 +488,7 @@ São testados cenários relacionados a:
 - VaccineService
 - RoutineService
 - AlertService
+- PetActivityService
 - validações dos Models;
 - criação de recursos;
 - consultas;
@@ -490,6 +533,8 @@ Os testes de integração utilizam:
 
 Durante os testes de integração, o Oracle é substituído por um banco em memória.
 
+Para os testes HTTP de `PetActivity`, é utilizada uma implementação simulada do repositório MongoDB em memória, sem necessidade de conectar ao Atlas durante a suíte automatizada.
+
 Fluxo testado:
 
 ```text
@@ -512,6 +557,7 @@ São testados fluxos HTTP de sucesso e erro para:
 - Vaccine
 - Routine
 - Alert
+- PetActivity
 - Health Checks
 
 Também são verificadas regras como:
@@ -554,6 +600,16 @@ Para executar toda a suíte:
 dotnet test
 ```
 
+Na última validação do projeto, **85 testes passaram**, sem falhas ou testes ignorados:
+
+| Suíte | Aprovados | Falhas |
+|---|---:|---:|
+| Unitários | 41 | 0 |
+| Integração | 44 | 0 |
+| **Total** | **85** | **0** |
+
+O comando `dotnet build` também concluiu com **0 erros e 0 warnings**.
+
 Para executar somente os testes unitários:
 
 ```bash
@@ -584,6 +640,54 @@ A connection string pode ser configurada em:
 - .NET User Secrets
 
 > Não versione usuário, senha ou outras credenciais reais do Oracle no repositório.
+
+---
+
+## Migração de dados: Oracle → JSON → MongoDB
+
+A solução inclui o projeto de console `Tools/PetOS.DataMigration`, responsável por exportar um snapshot dos dados relacionais e importá-lo para uma coleção independente no MongoDB Atlas.
+
+### Exportação
+
+Na raiz da solução, execute:
+
+```bash
+dotnet run --project Tools/PetOS.DataMigration -- export
+```
+
+O comando consulta pets do Oracle com seus relacionamentos de vacinas, rotinas e alertas, quando existentes, e gera `exports/pets-oracle-export.json` em **Extended JSON**.
+
+### Importação
+
+```bash
+dotnet run --project Tools/PetOS.DataMigration -- import
+```
+
+O comando lê o JSON e grava os documentos em `PetOS.pets_oracle_snapshot`, preservando `PetOS.pet_activities` como coleção separada.
+
+Cada documento importado usa um identificador determinístico, como `oracle-pet-1`, e a operação de substituição com **upsert** permite executar a importação novamente sem duplicar o mesmo pet.
+
+### Configuração local
+
+A migração utiliza as seguintes chaves de configuração:
+
+| Chave | Uso |
+|---|---|
+| `ConnectionStrings:Oracle` | Acesso ao banco relacional |
+| `MongoDb:ConnectionString` | URI de conexão do MongoDB Atlas |
+| `MongoDb:DatabaseName` | Nome do banco, por exemplo `PetOS` |
+
+Armazene as credenciais em **.NET User Secrets** ou variáveis de ambiente. Não inclua senhas ou URIs autenticadas nos arquivos versionados.
+
+### Resultado validado
+
+- Exportação do Oracle: **1 pet**.
+- Documentos importados no MongoDB: **1**.
+- Coleção de destino: `PetOS.pets_oracle_snapshot`.
+- Registro `oracle-pet-1` confirmado no Data Explorer do MongoDB Atlas.
+- As listas de vacinas, rotinas e alertas estavam vazias na base utilizada para essa validação.
+
+O processo **não remove registros do Oracle** nem altera a coleção de atividades.
 
 ---
 

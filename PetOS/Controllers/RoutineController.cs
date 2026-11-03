@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PetOS.Dto.Common;
 using PetOS.Dto.Routine;
+using PetOS.Hypermedia;
 using PetOS.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -15,53 +17,51 @@ public class RoutineController : ControllerBase
 {
     private readonly IRoutineService _service;
     private readonly IPetService _petService;
+    private readonly IResourceReadService _queries;
 
     public RoutineController(
         IRoutineService service,
-        IPetService petService)
+        IPetService petService,
+        IResourceReadService queries)
     {
         _service = service;
         _petService = petService;
+        _queries = queries;
     }
 
     /// <summary>
-    /// Lista todas as rotinas cadastradas.
+    /// Lista as rotinas cadastradas.
     /// </summary>
-    /// <response code="200">Rotinas encontradas com sucesso.</response>
-    /// <response code="204">Nenhuma rotina cadastrada.</response>
+    /// <param name="query">Filtros, paginação e ordenação.</param>
+    /// <response code="200">Rotinas encontradas.</response>
+    /// <response code="204">Nenhuma rotina encontrada.</response>
+    /// <response code="400">Parâmetros inválidos.</response>
     [HttpGet]
     [SwaggerOperation(
-        Summary = "Listar todas as rotinas",
-        Description = "Consulta os registros de rotinas de cuidados cadastrados no PetOS.",
+        Summary = "Listar rotinas",
+        Description = "Consulta as rotinas com filtros por pet e tipo, paginação, ordenação e links HATEOAS.",
         OperationId = "Routines_GetAll")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] RoutineQuery query)
     {
-        var routines = await _service.GetAllAsync();
+        var result = await _queries.GetRoutinesAsync(query);
 
-        if (!routines.Any())
-        {
-            return NoContent();
-        }
-
-        return Ok(new
-        {
-            message = "Rotinas encontradas com sucesso",
-            data = routines
-        });
+        return PageResult(result);
     }
 
     /// <summary>
     /// Consulta uma rotina pelo identificador.
     /// </summary>
     /// <param name="id">Identificador da rotina.</param>
-    /// <response code="200">Rotina encontrada com sucesso.</response>
+    /// <response code="200">Rotina encontrada.</response>
     /// <response code="404">Rotina não encontrada.</response>
     [HttpGet("{id}")]
     [SwaggerOperation(
         Summary = "Buscar rotina por ID",
-        Description = "Retorna os dados de uma rotina específica.",
+        Description = "Retorna os detalhes da rotina e os links para operações relacionadas.",
         OperationId = "Routines_GetById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -77,32 +77,39 @@ public class RoutineController : ControllerBase
             });
         }
 
-        return Ok(new
-        {
-            message = "Rotina encontrada com sucesso",
-            data = routine
-        });
+        return Ok(Hateoas.Item(
+            "Routine",
+            routine.Id,
+            routine,
+            "Rotina encontrada com sucesso"
+        ));
     }
 
     /// <summary>
-    /// Lista as rotinas de cuidados de um pet.
+    /// Lista as rotinas de um pet.
     /// </summary>
     /// <remarks>
-    /// Verifica a existência do animal e consulta suas rotinas cadastradas.
+    /// Verifica a existência do animal antes de consultar
+    /// suas rotinas cadastradas.
     /// </remarks>
     /// <param name="petId">Identificador do pet.</param>
-    /// <response code="200">Rotinas encontradas com sucesso.</response>
-    /// <response code="204">O pet não possui rotinas cadastradas.</response>
+    /// <param name="query">Filtros, paginação e ordenação.</param>
+    /// <response code="200">Rotinas encontradas.</response>
+    /// <response code="204">Nenhuma rotina encontrada.</response>
+    /// <response code="400">Parâmetros inválidos.</response>
     /// <response code="404">Pet não encontrado.</response>
     [HttpGet("pet/{petId}")]
     [SwaggerOperation(
         Summary = "Listar rotinas de um pet",
-        Description = "Consulta os cuidados e atividades registrados para um animal.",
+        Description = "Consulta as rotinas de um animal, com paginação e filtros adicionais.",
         OperationId = "Routines_GetByPetId")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByPetId(long petId)
+    public async Task<IActionResult> GetByPetId(
+        long petId,
+        [FromQuery] RoutineQuery query)
     {
         var pet = await _petService.GetByIdAsync(petId);
 
@@ -114,18 +121,11 @@ public class RoutineController : ControllerBase
             });
         }
 
-        var routines = await _service.GetByPetIdAsync(petId);
+        query.PetId = petId;
 
-        if (!routines.Any())
-        {
-            return NoContent();
-        }
+        var result = await _queries.GetRoutinesAsync(query);
 
-        return Ok(new
-        {
-            message = "Rotinas encontradas com sucesso",
-            data = routines
-        });
+        return PageResult(result);
     }
 
     /// <summary>
@@ -136,7 +136,7 @@ public class RoutineController : ControllerBase
     /// Requer autenticação por token JWT.
     /// </remarks>
     /// <param name="dto">Dados da rotina e identificador do pet.</param>
-    /// <response code="201">Rotina cadastrada com sucesso.</response>
+    /// <response code="201">Rotina cadastrada.</response>
     /// <response code="400">Dados inválidos.</response>
     /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Pet não encontrado.</response>
@@ -144,13 +144,14 @@ public class RoutineController : ControllerBase
     [HttpPost]
     [SwaggerOperation(
         Summary = "Cadastrar rotina",
-        Description = "Registra uma nova atividade ou cuidado associado a um pet.",
+        Description = "Registra uma atividade ou cuidado para um pet e retorna links HATEOAS.",
         OperationId = "Routines_Create")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create(RoutineCreateDto dto)
+    public async Task<IActionResult> Create(
+        [FromBody] RoutineCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -175,23 +176,25 @@ public class RoutineController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { id = created.Id },
-            new
-            {
-                message = "Rotina criada com sucesso",
-                data = created
-            });
+            Hateoas.Item(
+                "Routine",
+                created.Id,
+                created,
+                "Rotina criada com sucesso"
+            )
+        );
     }
 
     /// <summary>
     /// Atualiza uma rotina cadastrada.
     /// </summary>
     /// <remarks>
-    /// Verifica se a rotina e o pet existem antes de realizar a atualização.
+    /// Verifica a existência da rotina e do pet.
     /// Requer autenticação por token JWT.
     /// </remarks>
     /// <param name="id">Identificador da rotina.</param>
-    /// <param name="dto">Dados atualizados da rotina.</param>
-    /// <response code="200">Rotina atualizada com sucesso.</response>
+    /// <param name="dto">Dados atualizados.</param>
+    /// <response code="200">Rotina atualizada.</response>
     /// <response code="400">Dados inválidos.</response>
     /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Rotina ou pet não encontrado.</response>
@@ -205,7 +208,9 @@ public class RoutineController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(long id, RoutineCreateDto dto)
+    public async Task<IActionResult> Update(
+        long id,
+        [FromBody] RoutineCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -239,7 +244,8 @@ public class RoutineController : ControllerBase
 
         return Ok(new
         {
-            message = "Rotina atualizada com sucesso"
+            message = "Rotina atualizada com sucesso",
+            links = Hateoas.ForItem("Routine", id)
         });
     }
 
@@ -247,18 +253,18 @@ public class RoutineController : ControllerBase
     /// Exclui uma rotina cadastrada.
     /// </summary>
     /// <remarks>
-    /// Remove uma rotina pelo identificador.
-    /// Requer autenticação por token JWT.
+    /// Remove a rotina pelo identificador.
+    /// Requer autenticação JWT.
     /// </remarks>
     /// <param name="id">Identificador da rotina.</param>
-    /// <response code="200">Rotina excluída com sucesso.</response>
+    /// <response code="200">Rotina excluída.</response>
     /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Rotina não encontrada.</response>
     [Authorize]
     [HttpDelete("{id}")]
     [SwaggerOperation(
         Summary = "Excluir rotina",
-        Description = "Remove um registro de rotina de cuidados do sistema.",
+        Description = "Remove uma rotina e retorna links para a coleção.",
         OperationId = "Routines_Delete")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -279,7 +285,24 @@ public class RoutineController : ControllerBase
 
         return Ok(new
         {
-            message = "Rotina excluido com sucesso"
+            message = "Rotina excluída com sucesso",
+            links = Hateoas.ForCollection("Routine")
         });
+    }
+
+    private IActionResult PageResult(
+        PagedResult<RoutineResponseDto> result)
+    {
+        if (result.TotalCount == 0)
+        {
+            return NoContent();
+        }
+
+        return Ok(Hateoas.Page(
+            Request,
+            "Routine",
+            result,
+            "Rotinas encontradas com sucesso"
+        ));
     }
 }

@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetOS.UnitTests", "Tests\Pe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetOS.IntegrationTests", "Tests\PetOS.IntegrationTests\PetOS.IntegrationTests.csproj", "{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6AA68B28-9F3C-464E-9525-1BB3F547068D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetOS.DataMigration", "Tools\PetOS.DataMigration\PetOS.DataMigration.csproj", "{E9C80DE7-7E5C-4E34-9B19-DA1B0B76C15C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,9 +31,14 @@ Global
 		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9C80DE7-7E5C-4E34-9B19-DA1B0B76C15C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9C80DE7-7E5C-4E34-9B19-DA1B0B76C15C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9C80DE7-7E5C-4E34-9B19-DA1B0B76C15C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9C80DE7-7E5C-4E34-9B19-DA1B0B76C15C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{525AF112-32EA-4AFA-A041-783A7C97DABC} = {90396E7B-4335-47CA-8CCC-15CAAD13000D}
 		{4493C5EA-3E9D-4B1E-9BC6-F634D1BC7BE8} = {90396E7B-4335-47CA-8CCC-15CAAD13000D}
+		{E9C80DE7-7E5C-4E34-9B19-DA1B0B76C15C} = {6AA68B28-9F3C-464E-9525-1BB3F547068D}
 	EndGlobalSection
 EndGlobal

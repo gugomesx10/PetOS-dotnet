@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PetOS.Dto.Common;
 using PetOS.Dto.Vaccine;
+using PetOS.Hypermedia;
 using PetOS.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -15,53 +17,51 @@ public class VaccineController : ControllerBase
 {
     private readonly IVaccineService _service;
     private readonly IPetService _petService;
+    private readonly IResourceReadService _queries;
 
     public VaccineController(
         IVaccineService service,
-        IPetService petService)
+        IPetService petService,
+        IResourceReadService queries)
     {
         _service = service;
         _petService = petService;
+        _queries = queries;
     }
 
     /// <summary>
-    /// Lista todas as vacinas cadastradas.
+    /// Lista as vacinas cadastradas.
     /// </summary>
-    /// <response code="200">Vacinas encontradas com sucesso.</response>
-    /// <response code="204">Nenhuma vacina cadastrada.</response>
+    /// <param name="query">Filtros, paginação e ordenação.</param>
+    /// <response code="200">Vacinas encontradas.</response>
+    /// <response code="204">Nenhuma vacina encontrada.</response>
+    /// <response code="400">Parâmetros inválidos.</response>
     [HttpGet]
     [SwaggerOperation(
-        Summary = "Listar todas as vacinas",
-        Description = "Consulta todos os registros de vacinação disponíveis no PetOS.",
+        Summary = "Listar vacinas",
+        Description = "Consulta as vacinas com filtros por pet, nome e fabricante, paginação, ordenação e links HATEOAS.",
         OperationId = "Vaccines_GetAll")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] VaccineQuery query)
     {
-        var vaccines = await _service.GetAllAsync();
+        var result = await _queries.GetVaccinesAsync(query);
 
-        if (!vaccines.Any())
-        {
-            return NoContent();
-        }
-
-        return Ok(new
-        {
-            message = "Vacinas encontradas com sucesso",
-            data = vaccines
-        });
+        return PageResult(result);
     }
 
     /// <summary>
     /// Consulta uma vacina pelo identificador.
     /// </summary>
     /// <param name="id">Identificador da vacina.</param>
-    /// <response code="200">Vacina encontrada com sucesso.</response>
+    /// <response code="200">Vacina encontrada.</response>
     /// <response code="404">Vacina não encontrada.</response>
     [HttpGet("{id}")]
     [SwaggerOperation(
         Summary = "Buscar vacina por ID",
-        Description = "Retorna os dados de uma vacina a partir do identificador informado.",
+        Description = "Retorna os dados de uma vacina e os links para operações relacionadas.",
         OperationId = "Vaccines_GetById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -77,32 +77,39 @@ public class VaccineController : ControllerBase
             });
         }
 
-        return Ok(new
-        {
-            message = "Vacina encontrada com sucesso",
-            data = vaccine
-        });
+        return Ok(Hateoas.Item(
+            "Vaccine",
+            vaccine.Id,
+            vaccine,
+            "Vacina encontrada com sucesso"
+        ));
     }
 
     /// <summary>
     /// Lista as vacinas de um pet.
     /// </summary>
     /// <remarks>
-    /// Verifica se o animal existe e consulta seus registros de vacinação.
+    /// Verifica a existência do animal e consulta
+    /// seus registros de vacinação.
     /// </remarks>
     /// <param name="petId">Identificador do pet.</param>
-    /// <response code="200">Vacinas encontradas com sucesso.</response>
-    /// <response code="204">O pet não possui vacinas cadastradas.</response>
+    /// <param name="query">Filtros, paginação e ordenação.</param>
+    /// <response code="200">Vacinas encontradas.</response>
+    /// <response code="204">Nenhuma vacina encontrada.</response>
+    /// <response code="400">Parâmetros inválidos.</response>
     /// <response code="404">Pet não encontrado.</response>
     [HttpGet("pet/{petId}")]
     [SwaggerOperation(
         Summary = "Listar vacinas de um pet",
-        Description = "Consulta o histórico de vacinação de um animal específico.",
+        Description = "Consulta o histórico de vacinação de um animal com paginação e filtros adicionais.",
         OperationId = "Vaccines_GetByPetId")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetByPetId(long petId)
+    public async Task<IActionResult> GetByPetId(
+        long petId,
+        [FromQuery] VaccineQuery query)
     {
         var pet = await _petService.GetByIdAsync(petId);
 
@@ -114,29 +121,23 @@ public class VaccineController : ControllerBase
             });
         }
 
-        var vaccines = await _service.GetByPetIdAsync(petId);
+        query.PetId = petId;
 
-        if (!vaccines.Any())
-        {
-            return NoContent();
-        }
+        var result = await _queries.GetVaccinesAsync(query);
 
-        return Ok(new
-        {
-            message = "Vacinas encontradas com sucesso",
-            data = vaccines
-        });
+        return PageResult(result);
     }
 
     /// <summary>
     /// Registra uma vacina para um pet.
     /// </summary>
     /// <remarks>
-    /// Verifica a existência do animal antes de registrar a vacinação.
+    /// Verifica a existência do animal antes de cadastrar
+    /// o registro de vacinação.
     /// Requer autenticação por token JWT.
     /// </remarks>
     /// <param name="dto">Dados da vacina e identificador do pet.</param>
-    /// <response code="201">Vacina cadastrada com sucesso.</response>
+    /// <response code="201">Vacina cadastrada.</response>
     /// <response code="400">Dados inválidos.</response>
     /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Pet não encontrado.</response>
@@ -144,13 +145,14 @@ public class VaccineController : ControllerBase
     [HttpPost]
     [SwaggerOperation(
         Summary = "Cadastrar vacina",
-        Description = "Registra uma vacina associada a um animal existente.",
+        Description = "Registra uma vacina associada a um pet e retorna links HATEOAS.",
         OperationId = "Vaccines_Create")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Create(VaccineCreateDto dto)
+    public async Task<IActionResult> Create(
+        [FromBody] VaccineCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -175,23 +177,25 @@ public class VaccineController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { id = created.Id },
-            new
-            {
-                message = "Vacina adicionada com sucesso",
-                data = created
-            });
+            Hateoas.Item(
+                "Vaccine",
+                created.Id,
+                created,
+                "Vacina cadastrada com sucesso"
+            )
+        );
     }
 
     /// <summary>
     /// Atualiza um registro de vacinação.
     /// </summary>
     /// <remarks>
-    /// Verifica se a vacina e o pet informado existem antes da atualização.
+    /// Verifica se a vacina e o pet informado existem.
     /// Requer autenticação por token JWT.
     /// </remarks>
     /// <param name="id">Identificador da vacina.</param>
-    /// <param name="dto">Dados atualizados da vacinação.</param>
-    /// <response code="200">Vacina atualizada com sucesso.</response>
+    /// <param name="dto">Dados atualizados.</param>
+    /// <response code="200">Vacina atualizada.</response>
     /// <response code="400">Dados inválidos.</response>
     /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Vacina ou pet não encontrado.</response>
@@ -199,13 +203,15 @@ public class VaccineController : ControllerBase
     [HttpPut("{id}")]
     [SwaggerOperation(
         Summary = "Atualizar vacina",
-        Description = "Altera as informações de uma vacina já cadastrada.",
+        Description = "Altera as informações de uma vacina cadastrada.",
         OperationId = "Vaccines_Update")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(long id, VaccineCreateDto dto)
+    public async Task<IActionResult> Update(
+        long id,
+        [FromBody] VaccineCreateDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -239,7 +245,8 @@ public class VaccineController : ControllerBase
 
         return Ok(new
         {
-            message = "Vacina atualizada com sucesso"
+            message = "Vacina atualizada com sucesso",
+            links = Hateoas.ForItem("Vaccine", id)
         });
     }
 
@@ -248,17 +255,17 @@ public class VaccineController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Remove uma vacina cadastrada.
-    /// Requer autenticação por token JWT.
+    /// Requer autenticação JWT.
     /// </remarks>
     /// <param name="id">Identificador da vacina.</param>
-    /// <response code="200">Vacina excluída com sucesso.</response>
+    /// <response code="200">Vacina excluída.</response>
     /// <response code="401">Usuário não autenticado.</response>
     /// <response code="404">Vacina não encontrada.</response>
     [Authorize]
     [HttpDelete("{id}")]
     [SwaggerOperation(
         Summary = "Excluir vacina",
-        Description = "Remove um registro de vacinação pelo identificador.",
+        Description = "Remove um registro de vacinação e retorna links para a coleção.",
         OperationId = "Vaccines_Delete")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -279,7 +286,24 @@ public class VaccineController : ControllerBase
 
         return Ok(new
         {
-            message = "Vacina removida com sucesso"
+            message = "Vacina removida com sucesso",
+            links = Hateoas.ForCollection("Vaccine")
         });
+    }
+
+    private IActionResult PageResult(
+        PagedResult<VaccineResponseDto> result)
+    {
+        if (result.TotalCount == 0)
+        {
+            return NoContent();
+        }
+
+        return Ok(Hateoas.Page(
+            Request,
+            "Vaccine",
+            result,
+            "Vacinas encontradas com sucesso"
+        ));
     }
 }
